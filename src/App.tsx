@@ -1,3 +1,4 @@
+import { useState } from "react";
 import ProjectCard from "./components/ProjectCard";
 
 const projects = [
@@ -22,6 +23,50 @@ const projects = [
 ];
 
 function App() {
+  const [showRepoQA, setShowRepoQA] = useState(false);
+
+  if (showRepoQA) {
+    return (
+      <main>
+        <button
+          className="link-button"
+          type="button"
+          onClick={() => setShowRepoQA(false)}
+        >
+          Back to portfolio
+        </button>
+
+        <header className="hero project-detail">
+          <p className="eyebrow">Draft / Placeholder</p>
+          <h1>RepoQA</h1>
+          <p className="intro">
+            A placeholder page for a personal research project.
+          </p>
+        </header>
+
+        <section>
+          <h2>Overview</h2>
+          <p>Draft / placeholder overview content for RepoQA.</p>
+        </section>
+
+        <section>
+          <h2>Motivation</h2>
+          <p>Draft / placeholder motivation content for RepoQA.</p>
+        </section>
+
+        <section>
+          <h2>Current Status</h2>
+          <p>Draft / placeholder status: early research and planning.</p>
+        </section>
+
+        <section>
+          <h2>Links</h2>
+          <p>Draft / placeholder links will be added later.</p>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main>
       <header className="hero">
@@ -45,6 +90,11 @@ function App() {
       <section>
         <h2>Research Projects</h2>
         <div className="projects">
+          <ProjectCard
+            title="RepoQA"
+            description="A placeholder page for a personal research project."
+            onOpen={() => setShowRepoQA(true)}
+          />
           {projects.map((project) => (
             <ProjectCard key={project.title} {...project} />
           ))}
