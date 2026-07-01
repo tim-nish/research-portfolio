@@ -34,6 +34,11 @@ function App() {
             description="An open-source Claude Code plugin for AI-assisted research planning, literature synthesis, and candidate generation."
             link="https://github.com/tim-nish/PRISM"
           />
+          <ProjectCard
+            title="QuantScenarioBench"
+            description="A JAX-native Python framework for generating reproducible stochastic market scenarios (Black-Scholes, Heston, Rough Bergomi), with built-in export to Parquet and the Hugging Face Hub."
+            link="https://github.com/tim-nish/QuantScenarioBench"
+          />
         </div>
       </section>
 
