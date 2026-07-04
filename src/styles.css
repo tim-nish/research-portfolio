@@ -89,6 +89,25 @@ article p {
   color: #555953;
 }
 
+article p.project-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0;
+}
+
+.project-link-pill {
+  padding: 0.1rem 0.6rem;
+  border: 1px solid #d8d8d3;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.project-link-pill:hover {
+  border-color: #315b3d;
+}
+
 a {
   color: #315b3d;
   font-weight: 600;
