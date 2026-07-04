@@ -7,7 +7,7 @@ function App() {
         <p className="eyebrow">Research Portfolio</p>
         <h1>Tomoya Imanishi</h1>
         <p className="intro">
-          Building agentic AI systems that accelerate scientific research.
+          Building open-source agentic AI systems for reproducible scientific research and software engineering.
         </p>
       </header>
 
