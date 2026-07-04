@@ -36,8 +36,21 @@ function App() {
           />
           <ProjectCard
             title="QuantScenarioBench"
-            description="A JAX-native Python framework for generating reproducible stochastic market scenarios (Black-Scholes, Heston, Rough Bergomi), with built-in export to Parquet and the Hugging Face Hub."
-            link="https://github.com/tim-nish/QuantScenarioBench"
+            description="A JAX-native benchmark ecosystem for quantitative finance: reproducible stochastic market scenarios (Black-Scholes, Heston, Rough Bergomi), portfolio strategy evaluation, and a public leaderboard hosted on Hugging Face."
+            links={[
+              {
+                label: "GitHub",
+                href: "https://github.com/tim-nish/QuantScenarioBench",
+              },
+              {
+                label: "Live leaderboard",
+                href: "https://huggingface.co/spaces/QuantScenarioBench/qsb-leaderboard",
+              },
+              {
+                label: "Datasets",
+                href: "https://huggingface.co/QuantScenarioBench",
+              },
+            ]}
           />
         </div>
       </section>

@@ -89,6 +89,10 @@ article p {
   color: #555953;
 }
 
+article p.project-links {
+  margin-bottom: 0;
+}
+
 a {
   color: #315b3d;
   font-weight: 600;
