@@ -18,11 +18,10 @@ function ProjectCard({ title, description, link, links, onOpen }: ProjectCardPro
       <p>{description}</p>
       {links ? (
         <p className="project-links">
-          {links.map((item, index) => (
-            <span key={item.href}>
-              {index > 0 && <span aria-hidden="true"> · </span>}
-              <a href={item.href}>{item.label}</a>
-            </span>
+          {links.map((item) => (
+            <a key={item.href} className="project-link-pill" href={item.href}>
+              {item.label}
+            </a>
           ))}
         </p>
       ) : onOpen ? (

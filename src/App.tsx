@@ -36,7 +36,7 @@ function App() {
           />
           <ProjectCard
             title="QuantScenarioBench"
-            description="A JAX-native benchmark ecosystem for quantitative finance: reproducible stochastic market scenarios (Black-Scholes, Heston, Rough Bergomi), portfolio strategy evaluation, and a public leaderboard hosted on Hugging Face."
+            description="A JAX-native benchmark ecosystem for quantitative finance, with reproducible market scenarios, portfolio strategy evaluation, and a public Hugging Face leaderboard."
             links={[
               {
                 label: "GitHub",
