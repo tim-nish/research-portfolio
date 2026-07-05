@@ -8,10 +8,10 @@ Development happens inside the dev container (`.devcontainer/`): Node 22, GitHub
 
 ## Commands
 
-- `npm run dev` — Vite dev server at http://localhost:5173/research-portfolio/ (port 5173 is forwarded)
+- `npm run dev` — Vite dev server at http://localhost:5173/ (port 5173 is forwarded)
 - `npm run build` — type-check (`tsc -b`) then build to `dist/`
 - `npm run preview` — serve the production build locally
-- `docker compose up --build` — production build served by nginx at http://localhost:8080/research-portfolio/, mirroring the GitHub Pages layout
+- `docker compose up --build` — production build served by nginx at http://localhost:8080/, mirroring the GitHub Pages layout
 
 ## Architecture
 
@@ -22,6 +22,6 @@ Development happens inside the dev container (`.devcontainer/`): Node 22, GitHub
 
 ## Important notes
 
-- `vite.config.ts` sets `base: "/research-portfolio/"` because the site deploys to GitHub Pages at that subpath. All local URLs include that prefix; don't remove the base setting.
+- `vite.config.ts` sets `base: "/"` because the site deploys to the custom domain `https://tim-nish.dev` (not a GitHub Pages subpath). Don't remove the base setting.
 - Deployment is automatic: `.github/workflows/deploy.yml` builds and publishes to GitHub Pages on push to `main`.
 - `npm run build` runs the TypeScript compiler first, so use it as the type-check step before committing.
