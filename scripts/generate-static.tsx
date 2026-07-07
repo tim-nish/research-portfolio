@@ -31,6 +31,7 @@ import ProjectsIndexPage from "../src/pages/ProjectsIndexPage";
 import PublicationDetailPage from "../src/pages/PublicationDetailPage";
 import PublicationsIndexPage from "../src/pages/PublicationsIndexPage";
 import { buildPageMetaHtml, datasetJsonLd, personJsonLd, scholarlyArticleJsonLd } from "../src/seo/pageMeta";
+import { buildRobotsTxt, buildSitemapXml } from "../src/seo/sitemap";
 
 // Only relevant once NEWSLETTER_CONFIG.mode is "embed" — serialized from the same
 // function vitest exercises against jsdom (src/newsletter/embedFallback.ts), so the
@@ -76,6 +77,11 @@ function loadStylesheetHref(): string {
   return `/${cssFile}`;
 }
 
+// Populated by every writeStaticPage() call — the sitemap is built from this at the
+// end of main(), so it can never drift from what was actually generated (AC3: grows
+// automatically as later epics add pages, no code change needed here).
+const generatedRoutes: string[] = [];
+
 function writeStaticPage(
   routePath: string,
   headHtml: string,
@@ -106,7 +112,14 @@ function writeStaticPage(
   const outDir = path.join(DIST_DIR, routePath.replace(/^\/|\/$/g, ""));
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, "index.html"), html);
+  generatedRoutes.push(routePath);
   console.log(`Generated ${routePath}`);
+}
+
+function generateSitemapAndRobots() {
+  fs.writeFileSync(path.join(DIST_DIR, "sitemap.xml"), buildSitemapXml(generatedRoutes));
+  fs.writeFileSync(path.join(DIST_DIR, "robots.txt"), buildRobotsTxt());
+  console.log("Generated /sitemap.xml and /robots.txt");
 }
 
 // Included on every page once NEWSLETTER_CONFIG.mode is "embed" (the shared
@@ -415,6 +428,8 @@ function main() {
 
   generateProjectDetailPages(registry, stylesheetHref);
   generateBenchmarksPage(registry, stylesheetHref);
+
+  generateSitemapAndRobots();
 }
 
 main();
