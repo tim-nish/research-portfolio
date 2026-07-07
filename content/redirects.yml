@@ -1,0 +1,8 @@
+# Declarative redirect map (spec §7.1, AP-3): source -> destination. A static stub
+# page is generated at each `source` at build time (docs/architecture.md §7, D-9).
+# Real entry, not a placeholder: the KagamiOS project record replaced the site's
+# earlier "PRISM" naming in Story 1.3, before this project ever had a live detail
+# page under that name — this redirect protects anyone who bookmarked/linked the
+# old name from the current site's copy or history.
+- source: /projects/prism/
+  destination: /projects/kagamios/
