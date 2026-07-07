@@ -598,3 +598,23 @@ a:hover {
   padding-left: 1.25rem;
   color: #555953;
 }
+
+.newsletter-archive-list {
+  margin-top: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.newsletter-archive-list li {
+  padding: 1rem 0;
+  border-top: 1px solid #e1e1dc;
+}
+
+.newsletter-archive-subject {
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.newsletter-archive-summary {
+  color: #555953;
+}
