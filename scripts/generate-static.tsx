@@ -6,6 +6,8 @@ import type { ContentRecord, ContentRegistry } from "../src/content/load";
 import { loadContentRegistry } from "../src/content/load";
 import { collectFeaturedWork } from "../src/content/featuredWork";
 import { collectRecentWriting } from "../src/content/recentWriting";
+import { buildAtomFeed } from "../src/feed/buildFeed";
+import { collectFeedItems } from "../src/feed/feedItems";
 import {
   findBenchmarkProjects,
   findDatasetLinks,
@@ -394,6 +396,12 @@ function generateHomePage(registry: ContentRegistry, profileData: ProfileData, s
   writeStaticPage("/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
 }
 
+function generateFeed(registry: ContentRegistry) {
+  const items = collectFeedItems(registry);
+  fs.writeFileSync(path.join(DIST_DIR, "feed.xml"), buildAtomFeed(items));
+  console.log(`Generated /feed.xml (${items.length} item(s))`);
+}
+
 function main() {
   const stylesheetHref = loadStylesheetHref();
   const registry = loadContentRegistry();
@@ -415,6 +423,7 @@ function main() {
 
   generateProjectDetailPages(registry, stylesheetHref);
   generateBenchmarksPage(registry, stylesheetHref);
+  generateFeed(registry);
 }
 
 main();
