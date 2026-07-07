@@ -365,3 +365,50 @@ a:hover {
   margin-bottom: 1rem;
   color: #555953;
 }
+
+.newsletter-capture-heading {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.newsletter-capture-pitch {
+  max-width: 600px;
+  margin-bottom: 1rem;
+  color: #555953;
+}
+
+.newsletter-capture-link {
+  display: inline-block;
+  padding: 0.5rem 1.1rem;
+  color: #fff;
+  background: #315b3d;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.newsletter-capture-link:hover {
+  background: #173d23;
+  color: #fff;
+}
+
+.newsletter-capture-footer {
+  margin-bottom: 1.5rem;
+}
+
+.newsletter-embed-wrapper iframe {
+  width: 100%;
+  max-width: 400px;
+  height: 200px;
+  border: 0;
+}
+
+.site-footer-links {
+  margin-bottom: 0.75rem;
+  color: #555953;
+}
+
+.newsletter-page .newsletter-pitch {
+  max-width: 600px;
+  margin: 0.5rem 0 2rem;
+}
