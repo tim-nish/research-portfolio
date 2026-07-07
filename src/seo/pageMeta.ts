@@ -126,10 +126,7 @@ export function softwareApplicationJsonLd(product: {
   };
 }
 
-/**
- * `Article` JSON-LD (spec §8.2) for a canonical article page — stubbed ahead of
- * Epic 2 (no `/writing/<slug>/` page exists yet to call this).
- */
+/** `Article` JSON-LD (spec §8.2) for a canonical article's detail page. */
 export function articleJsonLd(article: {
   title: string;
   date: string;
