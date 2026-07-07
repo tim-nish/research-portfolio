@@ -1,3 +1,5 @@
+import NewsletterCapture from "../components/NewsletterCapture";
+
 interface AuthorEntry {
   name: string;
   isOwner: boolean;
@@ -115,12 +117,9 @@ function PublicationDetailPage({
         </section>
       )}
 
-      <section aria-labelledby="contact-heading" className="standard-cta">
-        <h2 id="contact-heading">Get in touch</h2>
-        <p>
-          Questions or collaboration ideas? <a href="mailto:tomoya.imanishi.ti@gmail.com">Email me</a>.
-        </p>
-      </section>
+      <div className="standard-cta">
+        <NewsletterCapture variant="inline" heading="Get notified about what I build next." />
+      </div>
     </article>
   );
 }

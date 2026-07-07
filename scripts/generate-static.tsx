@@ -18,13 +18,21 @@ import {
 } from "../src/content/publicationView";
 import type { ProjectFrontmatter, PublicationFrontmatter } from "../src/content/schema";
 import SiteLayout from "../src/layout/SiteLayout";
+import { NEWSLETTER_CONFIG } from "../src/newsletter/config";
+import { initNewsletterEmbedFallback } from "../src/newsletter/embedFallback";
 import AboutPage from "../src/pages/AboutPage";
 import BenchmarksPage from "../src/pages/BenchmarksPage";
+import NewsletterPage from "../src/pages/NewsletterPage";
 import ProjectDetailPage from "../src/pages/ProjectDetailPage";
 import ProjectsIndexPage from "../src/pages/ProjectsIndexPage";
 import PublicationDetailPage from "../src/pages/PublicationDetailPage";
 import PublicationsIndexPage from "../src/pages/PublicationsIndexPage";
 import { buildPageMetaHtml, datasetJsonLd, personJsonLd, scholarlyArticleJsonLd } from "../src/seo/pageMeta";
+
+// Only relevant once NEWSLETTER_CONFIG.mode is "embed" — serialized from the same
+// function vitest exercises against jsdom (src/newsletter/embedFallback.ts), so the
+// tested behavior and the shipped script can't drift apart.
+const NEWSLETTER_EMBED_FALLBACK_SCRIPT = `(${initNewsletterEmbedFallback.toString()})();`;
 
 const BENCHMARKS_STANCE =
   "Evaluation engineering is a focus area here, not an afterthought: benchmarks are built to be " +
@@ -70,8 +78,13 @@ function writeStaticPage(
   headHtml: string,
   bodyHtml: string,
   stylesheetHref: string,
-  scriptHtml?: string,
+  scripts: (string | undefined | false)[] = [],
 ) {
+  const scriptTags = scripts
+    .filter((script): script is string => Boolean(script))
+    .map((script) => `<script>${script}</script>`)
+    .join("\n    ");
+
   const html = `<!doctype html>
 <html lang="en">
   <head>
@@ -82,7 +95,7 @@ function writeStaticPage(
   </head>
   <body>
     <div id="root">${bodyHtml}</div>
-    ${scriptHtml ? `<script>${scriptHtml}</script>` : ""}
+    ${scriptTags}
   </body>
 </html>
 `;
@@ -92,6 +105,11 @@ function writeStaticPage(
   fs.writeFileSync(path.join(outDir, "index.html"), html);
   console.log(`Generated ${routePath}`);
 }
+
+// Included on every page once NEWSLETTER_CONFIG.mode is "embed" (the shared
+// NewsletterCapture in the footer means every page is a candidate); a no-op
+// query-and-return when mode is "link", as it is today.
+const NEWSLETTER_SCRIPTS = NEWSLETTER_CONFIG.mode === "embed" ? [NEWSLETTER_EMBED_FALLBACK_SCRIPT] : [];
 
 interface ProfileData {
   name: string;
@@ -127,7 +145,7 @@ function generateAboutPage(profileData: ProfileData, stylesheetHref: string) {
     }),
   });
 
-  writeStaticPage("/about/", headHtml, bodyHtml, stylesheetHref);
+  writeStaticPage("/about/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
 }
 
 function generateProjectsIndexPage(registry: ContentRegistry, focusAreas: string[], stylesheetHref: string) {
@@ -158,7 +176,7 @@ function generateProjectsIndexPage(registry: ContentRegistry, focusAreas: string
     path: "/projects/",
   });
 
-  writeStaticPage("/projects/", headHtml, bodyHtml, stylesheetHref);
+  writeStaticPage("/projects/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
 }
 
 function generateProjectDetailPages(registry: ContentRegistry, stylesheetHref: string) {
@@ -196,13 +214,10 @@ function generateProjectDetailPages(registry: ContentRegistry, stylesheetHref: s
           : undefined,
     });
 
-    writeStaticPage(
-      path,
-      headHtml,
-      bodyHtml,
-      stylesheetHref,
+    writeStaticPage(path, headHtml, bodyHtml, stylesheetHref, [
       data.citation ? CITATION_COPY_SCRIPT : undefined,
-    );
+      ...NEWSLETTER_SCRIPTS,
+    ]);
   }
 }
 
@@ -230,7 +245,7 @@ function generateBenchmarksPage(registry: ContentRegistry, stylesheetHref: strin
     path: "/benchmarks/",
   });
 
-  writeStaticPage("/benchmarks/", headHtml, bodyHtml, stylesheetHref);
+  writeStaticPage("/benchmarks/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
 }
 
 function generatePublicationsIndexPage(registry: ContentRegistry, ownerName: string, stylesheetHref: string) {
@@ -261,7 +276,7 @@ function generatePublicationsIndexPage(registry: ContentRegistry, ownerName: str
     path: "/publications/",
   });
 
-  writeStaticPage("/publications/", headHtml, bodyHtml, stylesheetHref);
+  writeStaticPage("/publications/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
 }
 
 function generatePublicationDetailPages(registry: ContentRegistry, ownerName: string, stylesheetHref: string) {
@@ -307,8 +322,24 @@ function generatePublicationDetailPages(registry: ContentRegistry, ownerName: st
       }),
     });
 
-    writeStaticPage(path, headHtml, bodyHtml, stylesheetHref, CITATION_COPY_SCRIPT);
+    writeStaticPage(path, headHtml, bodyHtml, stylesheetHref, [CITATION_COPY_SCRIPT, ...NEWSLETTER_SCRIPTS]);
   }
+}
+
+function generateNewsletterPage(focusAreas: string[], stylesheetHref: string) {
+  const bodyHtml = renderToStaticMarkup(
+    <SiteLayout>
+      <NewsletterPage focusAreas={focusAreas} />
+    </SiteLayout>,
+  );
+
+  const headHtml = buildPageMetaHtml({
+    title: "Newsletter",
+    description: "Occasional notes on new projects, benchmark results, and tools as they ship.",
+    path: "/newsletter/",
+  });
+
+  writeStaticPage("/newsletter/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
 }
 
 function main() {
@@ -322,8 +353,9 @@ function main() {
     generateProjectsIndexPage(registry, profileData.focus_areas, stylesheetHref);
     generatePublicationsIndexPage(registry, profileData.name, stylesheetHref);
     generatePublicationDetailPages(registry, profileData.name, stylesheetHref);
+    generateNewsletterPage(profileData.focus_areas, stylesheetHref);
   } else {
-    console.log("No profile record found — skipping /about/, /projects/, and /publications/ generation.");
+    console.log("No profile record found — skipping /about/, /projects/, /publications/, and /newsletter/ generation.");
   }
 
   generateProjectDetailPages(registry, stylesheetHref);
