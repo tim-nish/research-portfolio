@@ -113,8 +113,6 @@ describe("scholarlyArticleJsonLd", () => {
   });
 });
 
-// No /products/<slug>/ page exists yet (Epic 3) — this stubs the mapping ahead of
-// Story 3.2, per Story 1.8 AC2.
 describe("softwareApplicationJsonLd", () => {
   it("builds a SoftwareApplication block with an Offer when pricing is known", () => {
     const jsonLd = softwareApplicationJsonLd({

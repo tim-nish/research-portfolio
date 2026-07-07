@@ -511,3 +511,54 @@ a:hover {
   color: #536b5c;
   font-size: 0.9rem;
 }
+
+.product-subhead {
+  max-width: 600px;
+  margin: 1rem 0 2rem;
+  color: #555953;
+  font-size: 1.1rem;
+}
+
+.product-cta {
+  margin-bottom: 2rem;
+}
+
+.product-cta-button {
+  display: inline-block;
+  padding: 0.7rem 1.5rem;
+  color: #fff;
+  background: #315b3d;
+  border-radius: 999px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.product-cta-button:hover {
+  background: #173d23;
+  color: #fff;
+}
+
+.product-body p {
+  margin-bottom: 1rem;
+  color: #555953;
+}
+
+.platform-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 1.5rem 0 0;
+}
+
+.product-sunset-block {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: #fbf1d3;
+  border-radius: 0.5rem;
+}
+
+.product-sunset-block h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
