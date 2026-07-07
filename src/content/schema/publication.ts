@@ -14,6 +14,10 @@ export const publicationFrontmatterSchema = z.object({
   citation: z.string().min(1),
   related: relatedSchema,
   featured: z.boolean().optional().default(false),
+  // Additive field (not in spec §6.2's normative table, same D-10/D-11-style gap):
+  // §6.4 requires a `superseded` record to point at its superseding record, but the
+  // spec never names a field for it. Slug of the publication that supersedes this one.
+  supersededBy: slugSchema.optional(),
 });
 
 export type PublicationFrontmatter = z.infer<typeof publicationFrontmatterSchema>;

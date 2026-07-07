@@ -77,3 +77,24 @@ export function datasetJsonLd(project: {
     ...(project.citation ? { citation: project.citation } : {}),
   };
 }
+
+/** `ScholarlyArticle` JSON-LD (spec §8.2) for a publication's detail page. */
+export function scholarlyArticleJsonLd(publication: {
+  title: string;
+  authors: string[];
+  venue: string;
+  year: number;
+  path: string;
+  citation: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    headline: publication.title,
+    author: publication.authors.map((name) => ({ "@type": "Person", name })),
+    isPartOf: publication.venue,
+    datePublished: String(publication.year),
+    url: `${SITE_URL}${publication.path}`,
+    citation: publication.citation,
+  };
+}

@@ -10,13 +10,21 @@ import {
   findLeaderboardLink,
   groupProjectsForIndex,
 } from "../src/content/projectView";
-import type { ProjectFrontmatter } from "../src/content/schema";
+import {
+  findCodeLink,
+  findPaperLink,
+  groupPublicationsByYear,
+  highlightOwnerAuthor,
+} from "../src/content/publicationView";
+import type { ProjectFrontmatter, PublicationFrontmatter } from "../src/content/schema";
 import SiteLayout from "../src/layout/SiteLayout";
 import AboutPage from "../src/pages/AboutPage";
 import BenchmarksPage from "../src/pages/BenchmarksPage";
 import ProjectDetailPage from "../src/pages/ProjectDetailPage";
 import ProjectsIndexPage from "../src/pages/ProjectsIndexPage";
-import { buildPageMetaHtml, datasetJsonLd, personJsonLd } from "../src/seo/pageMeta";
+import PublicationDetailPage from "../src/pages/PublicationDetailPage";
+import PublicationsIndexPage from "../src/pages/PublicationsIndexPage";
+import { buildPageMetaHtml, datasetJsonLd, personJsonLd, scholarlyArticleJsonLd } from "../src/seo/pageMeta";
 
 const BENCHMARKS_STANCE =
   "Evaluation engineering is a focus area here, not an afterthought: benchmarks are built to be " +
@@ -225,6 +233,84 @@ function generateBenchmarksPage(registry: ContentRegistry, stylesheetHref: strin
   writeStaticPage("/benchmarks/", headHtml, bodyHtml, stylesheetHref);
 }
 
+function generatePublicationsIndexPage(registry: ContentRegistry, ownerName: string, stylesheetHref: string) {
+  const groups = groupPublicationsByYear(registry.records.publication as ContentRecord<PublicationFrontmatter>[]).map(
+    (group) => ({
+      year: group.year,
+      publications: group.publications.map((record) => ({
+        slug: record.slug,
+        title: record.data.title,
+        authors: highlightOwnerAuthor(record.data.authors, ownerName),
+        venue: record.data.venue,
+        year: record.data.year,
+        status: record.data.status,
+        links: record.data.links,
+      })),
+    }),
+  );
+
+  const bodyHtml = renderToStaticMarkup(
+    <SiteLayout>
+      <PublicationsIndexPage groups={groups} />
+    </SiteLayout>,
+  );
+
+  const headHtml = buildPageMetaHtml({
+    title: "Publications",
+    description: "Papers, preprints, and their code, grouped by year.",
+    path: "/publications/",
+  });
+
+  writeStaticPage("/publications/", headHtml, bodyHtml, stylesheetHref);
+}
+
+function generatePublicationDetailPages(registry: ContentRegistry, ownerName: string, stylesheetHref: string) {
+  for (const record of registry.records.publication) {
+    const data = record.data as PublicationFrontmatter;
+    const relatedSlugsByType = registry.relatedBy.publication[record.slug];
+    const supersededByRecord = data.supersededBy
+      ? (registry.bySlug.publication[data.supersededBy] as ContentRecord<PublicationFrontmatter> | undefined)
+      : undefined;
+
+    const bodyHtml = renderToStaticMarkup(
+      <SiteLayout>
+        <PublicationDetailPage
+          title={data.title}
+          authors={highlightOwnerAuthor(data.authors, ownerName)}
+          venue={data.venue}
+          year={data.year}
+          status={data.status}
+          links={data.links}
+          paperLink={findPaperLink(data.links)}
+          codeLink={findCodeLink(data.links)}
+          bodyHtml={record.bodyHtml || undefined}
+          citation={data.citation}
+          supersededByTitle={supersededByRecord?.data.title}
+          supersededBySlug={data.supersededBy}
+          relatedSlugsByType={relatedSlugsByType}
+        />
+      </SiteLayout>,
+    );
+
+    const path = `/publications/${record.slug}/`;
+    const headHtml = buildPageMetaHtml({
+      title: data.title,
+      description: `${data.authors.join(", ")} — ${data.venue} ${data.year}`,
+      path,
+      jsonLd: scholarlyArticleJsonLd({
+        title: data.title,
+        authors: data.authors,
+        venue: data.venue,
+        year: data.year,
+        path,
+        citation: data.citation,
+      }),
+    });
+
+    writeStaticPage(path, headHtml, bodyHtml, stylesheetHref, CITATION_COPY_SCRIPT);
+  }
+}
+
 function main() {
   const stylesheetHref = loadStylesheetHref();
   const registry = loadContentRegistry();
@@ -234,8 +320,10 @@ function main() {
     const profileData = profile.data as ProfileData;
     generateAboutPage(profileData, stylesheetHref);
     generateProjectsIndexPage(registry, profileData.focus_areas, stylesheetHref);
+    generatePublicationsIndexPage(registry, profileData.name, stylesheetHref);
+    generatePublicationDetailPages(registry, profileData.name, stylesheetHref);
   } else {
-    console.log("No profile record found — skipping /about/ and /projects/ generation.");
+    console.log("No profile record found — skipping /about/, /projects/, and /publications/ generation.");
   }
 
   generateProjectDetailPages(registry, stylesheetHref);
