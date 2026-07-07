@@ -494,3 +494,20 @@ a:hover {
   color: #536b5c;
   font-size: 0.75rem;
 }
+
+.article-meta-line {
+  margin: 0.25rem 0 2rem;
+  color: #555953;
+  font-size: 0.9rem;
+}
+
+.article-body p {
+  margin-bottom: 1rem;
+  color: #555953;
+}
+
+.syndication-note {
+  margin-top: 1.5rem;
+  color: #536b5c;
+  font-size: 0.9rem;
+}

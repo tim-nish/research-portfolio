@@ -21,11 +21,12 @@ import {
   groupPublicationsByYear,
   highlightOwnerAuthor,
 } from "../src/content/publicationView";
-import type { ProjectFrontmatter, PublicationFrontmatter } from "../src/content/schema";
+import type { ArticleFrontmatter, ProjectFrontmatter, PublicationFrontmatter } from "../src/content/schema";
 import SiteLayout from "../src/layout/SiteLayout";
 import { NEWSLETTER_CONFIG } from "../src/newsletter/config";
 import { initNewsletterEmbedFallback } from "../src/newsletter/embedFallback";
 import AboutPage from "../src/pages/AboutPage";
+import ArticleDetailPage from "../src/pages/ArticleDetailPage";
 import BenchmarksPage from "../src/pages/BenchmarksPage";
 import HomePage from "../src/pages/HomePage";
 import NewsletterPage from "../src/pages/NewsletterPage";
@@ -37,7 +38,7 @@ import PublicationsIndexPage from "../src/pages/PublicationsIndexPage";
 import WritingIndexPage from "../src/pages/WritingIndexPage";
 import { buildRedirectStubHtml, loadRedirects } from "../src/redirects/redirects";
 import { assertTrailingSlashPolicy } from "../src/routing/trailingSlashPolicy";
-import { buildPageMetaHtml, datasetJsonLd, personJsonLd, scholarlyArticleJsonLd } from "../src/seo/pageMeta";
+import { articleJsonLd, buildPageMetaHtml, datasetJsonLd, personJsonLd, scholarlyArticleJsonLd } from "../src/seo/pageMeta";
 import { buildRobotsTxt, buildSitemapXml } from "../src/seo/sitemap";
 
 // Only relevant once NEWSLETTER_CONFIG.mode is "embed" — serialized from the same
@@ -356,6 +357,51 @@ function generateWritingIndexPage(registry: ContentRegistry, stylesheetHref: str
   writeStaticPage("/writing/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
 }
 
+function generateArticleDetailPages(registry: ContentRegistry, ownerName: string, stylesheetHref: string) {
+  // Filters to canonical records before the loop even starts, not via a per-record
+  // runtime guard — external-mode articles literally never reach writeStaticPage,
+  // keeping AP-6 ("external entries do NOT get a detail page") true by construction.
+  const canonicalArticles = (registry.records.article as ContentRecord<ArticleFrontmatter>[]).filter(
+    (record) => record.data.mode === "canonical",
+  );
+
+  for (const record of canonicalArticles) {
+    const data = record.data;
+    const relatedSlugsByType = registry.relatedBy.article[record.slug];
+
+    const bodyHtml = renderToStaticMarkup(
+      <SiteLayout>
+        <ArticleDetailPage
+          title={data.title}
+          date={data.date}
+          updated={data.updated}
+          status={data.status}
+          bodyHtml={record.bodyHtml}
+          topics={data.topics}
+          syndication={data.syndication}
+          relatedSlugsByType={relatedSlugsByType}
+        />
+      </SiteLayout>,
+    );
+
+    const path = `/writing/${record.slug}/`;
+    const headHtml = buildPageMetaHtml({
+      title: data.title,
+      description: data.summary,
+      path,
+      jsonLd: articleJsonLd({
+        title: data.title,
+        date: data.date,
+        updated: data.updated,
+        path,
+        authorName: ownerName,
+      }),
+    });
+
+    writeStaticPage(path, headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
+  }
+}
+
 function generatePublicationDetailPages(registry: ContentRegistry, ownerName: string, stylesheetHref: string) {
   for (const record of registry.records.publication) {
     const data = record.data as PublicationFrontmatter;
@@ -486,6 +532,7 @@ function main() {
     generatePublicationsIndexPage(registry, profileData.name, stylesheetHref);
     generatePublicationDetailPages(registry, profileData.name, stylesheetHref);
     generateWritingIndexPage(registry, stylesheetHref);
+    generateArticleDetailPages(registry, profileData.name, stylesheetHref);
     generateNewsletterPage(profileData.focus_areas, stylesheetHref);
     generateNotFoundPage(profileData, stylesheetHref);
   } else {

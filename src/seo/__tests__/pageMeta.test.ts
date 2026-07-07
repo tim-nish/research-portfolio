@@ -140,8 +140,6 @@ describe("softwareApplicationJsonLd", () => {
   });
 });
 
-// No /writing/<slug>/ page exists yet (Epic 2) — this stubs the mapping ahead of
-// Story 2.3, per Story 1.8 AC2.
 describe("articleJsonLd", () => {
   it("includes dateModified only when the article has been updated", () => {
     const withUpdate = articleJsonLd({
