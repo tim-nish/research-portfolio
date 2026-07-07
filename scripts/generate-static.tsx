@@ -26,10 +26,13 @@ import AboutPage from "../src/pages/AboutPage";
 import BenchmarksPage from "../src/pages/BenchmarksPage";
 import HomePage from "../src/pages/HomePage";
 import NewsletterPage from "../src/pages/NewsletterPage";
+import NotFoundPage from "../src/pages/NotFoundPage";
 import ProjectDetailPage from "../src/pages/ProjectDetailPage";
 import ProjectsIndexPage from "../src/pages/ProjectsIndexPage";
 import PublicationDetailPage from "../src/pages/PublicationDetailPage";
 import PublicationsIndexPage from "../src/pages/PublicationsIndexPage";
+import { buildRedirectStubHtml, loadRedirects } from "../src/redirects/redirects";
+import { assertTrailingSlashPolicy } from "../src/routing/trailingSlashPolicy";
 import { buildPageMetaHtml, datasetJsonLd, personJsonLd, scholarlyArticleJsonLd } from "../src/seo/pageMeta";
 import { buildRobotsTxt, buildSitemapXml } from "../src/seo/sitemap";
 
@@ -89,6 +92,8 @@ function writeStaticPage(
   stylesheetHref: string,
   scripts: (string | undefined | false)[] = [],
 ) {
+  assertTrailingSlashPolicy(routePath);
+
   const scriptTags = scripts
     .filter((script): script is string => Boolean(script))
     .map((script) => `<script>${script}</script>`)
@@ -120,6 +125,41 @@ function generateSitemapAndRobots() {
   fs.writeFileSync(path.join(DIST_DIR, "sitemap.xml"), buildSitemapXml(generatedRoutes));
   fs.writeFileSync(path.join(DIST_DIR, "robots.txt"), buildRobotsTxt());
   console.log("Generated /sitemap.xml and /robots.txt");
+}
+
+const REDIRECTS_PATH = path.join(process.cwd(), "content", "redirects.yml");
+
+function generateRedirectStubs(stylesheetHref: string) {
+  const redirects = loadRedirects(REDIRECTS_PATH);
+  for (const { source, destination } of redirects) {
+    const outDir = path.join(DIST_DIR, source.replace(/^\/|\/$/g, ""));
+    fs.mkdirSync(outDir, { recursive: true });
+    fs.writeFileSync(path.join(outDir, "index.html"), buildRedirectStubHtml(destination, stylesheetHref));
+    console.log(`Generated redirect stub ${source} -> ${destination}`);
+  }
+}
+
+function generateNotFoundPage(profileData: ProfileData, stylesheetHref: string) {
+  const bodyHtml = renderToStaticMarkup(
+    <NotFoundPage ownerName={profileData.name} positioning={profileData.positioning} />,
+  );
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="${stylesheetHref}" />
+    <title>Not found — ${profileData.name}</title>
+  </head>
+  <body>
+    <div id="root">${bodyHtml}</div>
+  </body>
+</html>
+`;
+  // GitHub Pages requires the custom 404 document at the site root as 404.html
+  // (not a /404/ directory) to serve it automatically for unmatched paths.
+  fs.writeFileSync(path.join(DIST_DIR, "404.html"), html);
+  console.log("Generated /404");
 }
 
 // Included on every page once NEWSLETTER_CONFIG.mode is "embed" (the shared
@@ -420,14 +460,16 @@ function main() {
     generatePublicationsIndexPage(registry, profileData.name, stylesheetHref);
     generatePublicationDetailPages(registry, profileData.name, stylesheetHref);
     generateNewsletterPage(profileData.focus_areas, stylesheetHref);
+    generateNotFoundPage(profileData, stylesheetHref);
   } else {
     console.log(
-      "No profile record found — skipping /, /about/, /projects/, /publications/, and /newsletter/ generation.",
+      "No profile record found — skipping /, /about/, /projects/, /publications/, /newsletter/, and /404 generation.",
     );
   }
 
   generateProjectDetailPages(registry, stylesheetHref);
   generateBenchmarksPage(registry, stylesheetHref);
+  generateRedirectStubs(stylesheetHref);
 
   generateSitemapAndRobots();
 }
