@@ -317,3 +317,51 @@ a:hover {
   color: #536b5c;
   font-size: 0.8rem;
 }
+
+.publications {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.publication-authors {
+  margin-bottom: 0.25rem;
+  color: #555953;
+}
+
+.publication-author-owner {
+  color: #202124;
+  font-weight: 700;
+}
+
+.publication-venue-year {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  color: #555953;
+  font-size: 0.9rem;
+}
+
+.status-badge {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-badge-preprint {
+  color: #6b5a20;
+  background: #fbf1d3;
+}
+
+.status-badge-superseded {
+  color: #555953;
+  background: #e1e1dc;
+}
+
+.publication-body p {
+  margin-bottom: 1rem;
+  color: #555953;
+}

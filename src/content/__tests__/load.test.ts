@@ -93,4 +93,16 @@ describe("loadContentRegistry — failure modes (AC2/AC3)", () => {
       ContentValidationErrors,
     );
   });
+
+  it("fails the build when a publication's supersededBy references an unresolvable slug", () => {
+    try {
+      loadContentRegistry({ contentDir: bad("unresolved-superseded-by") });
+      throw new Error("expected loadContentRegistry to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ContentValidationErrors);
+      expect(
+        (error as ContentValidationErrors).errors.some((e) => e.message.includes("supersededBy references unresolvable slug")),
+      ).toBe(true);
+    }
+  });
 });

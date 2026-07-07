@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPageMetaHtml, datasetJsonLd, personJsonLd } from "../pageMeta";
+import { buildPageMetaHtml, datasetJsonLd, personJsonLd, scholarlyArticleJsonLd } from "../pageMeta";
 
 describe("buildPageMetaHtml", () => {
   it("follows the `<Page/Entity> — <Owner name>` title pattern and emits a canonical tag", () => {
@@ -71,5 +71,25 @@ describe("datasetJsonLd", () => {
     });
 
     expect(jsonLd.citation).toBe("@misc{qsb2026}");
+  });
+});
+
+describe("scholarlyArticleJsonLd", () => {
+  it("builds a ScholarlyArticle block with each author as a Person", () => {
+    const jsonLd = scholarlyArticleJsonLd({
+      title: "A Fixture Paper",
+      authors: ["Tomoya Imanishi", "A Collaborator"],
+      venue: "arXiv",
+      year: 2026,
+      path: "/publications/a-fixture-paper/",
+      citation: "@misc{fixture2026}",
+    });
+
+    expect(jsonLd["@type"]).toBe("ScholarlyArticle");
+    expect(jsonLd.author).toEqual([
+      { "@type": "Person", name: "Tomoya Imanishi" },
+      { "@type": "Person", name: "A Collaborator" },
+    ]);
+    expect(jsonLd.url).toBe("https://tim-nish.dev/publications/a-fixture-paper/");
   });
 });

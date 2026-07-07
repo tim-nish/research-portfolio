@@ -201,6 +201,16 @@ export function loadContentRegistry(options: LoadOptions = {}): ContentRegistry 
     }
   }
 
+  for (const record of records.publication) {
+    const supersededBy = (record.data as { supersededBy?: string }).supersededBy;
+    if (supersededBy && !bySlug.publication[supersededBy]) {
+      errors.push({
+        file: record.filePath,
+        message: `supersededBy references unresolvable slug "${supersededBy}" (no publication with that slug)`,
+      });
+    }
+  }
+
   const relatedBy: Record<ContentType, Record<string, InverseRelations>> = {
     profile: {},
     project: {},
