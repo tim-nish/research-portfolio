@@ -104,3 +104,46 @@ export function scholarlyArticleJsonLd(publication: {
     citation: publication.citation,
   };
 }
+
+/**
+ * `SoftwareApplication` JSON-LD (spec §8.2) for a product landing page — stubbed
+ * ahead of Epic 3 (no `/products/<slug>/` page exists yet to call this), so the
+ * mapping is ready and tested before Story 3.2 wires it in.
+ */
+export function softwareApplicationJsonLd(product: {
+  title: string;
+  summary: string;
+  path: string;
+  pricing: "free" | "freemium" | "paid" | "tbd";
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: product.title,
+    description: product.summary,
+    url: `${SITE_URL}${product.path}`,
+    ...(product.pricing !== "tbd" ? { offers: { "@type": "Offer", category: product.pricing } } : {}),
+  };
+}
+
+/**
+ * `Article` JSON-LD (spec §8.2) for a canonical article page — stubbed ahead of
+ * Epic 2 (no `/writing/<slug>/` page exists yet to call this).
+ */
+export function articleJsonLd(article: {
+  title: string;
+  date: string;
+  updated?: string;
+  path: string;
+  authorName: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    datePublished: article.date,
+    ...(article.updated ? { dateModified: article.updated } : {}),
+    url: `${SITE_URL}${article.path}`,
+    author: { "@type": "Person", name: article.authorName },
+  };
+}

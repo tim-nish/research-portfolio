@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { buildPageMetaHtml, datasetJsonLd, personJsonLd, scholarlyArticleJsonLd } from "../pageMeta";
+import {
+  articleJsonLd,
+  buildPageMetaHtml,
+  datasetJsonLd,
+  personJsonLd,
+  scholarlyArticleJsonLd,
+  softwareApplicationJsonLd,
+} from "../pageMeta";
 
 describe("buildPageMetaHtml", () => {
   it("follows the `<Page/Entity> — <Owner name>` title pattern and emits a canonical tag", () => {
@@ -103,5 +110,55 @@ describe("scholarlyArticleJsonLd", () => {
       { "@type": "Person", name: "A Collaborator" },
     ]);
     expect(jsonLd.url).toBe("https://tim-nish.dev/publications/a-fixture-paper/");
+  });
+});
+
+// No /products/<slug>/ page exists yet (Epic 3) — this stubs the mapping ahead of
+// Story 3.2, per Story 1.8 AC2.
+describe("softwareApplicationJsonLd", () => {
+  it("builds a SoftwareApplication block with an Offer when pricing is known", () => {
+    const jsonLd = softwareApplicationJsonLd({
+      title: "A Fixture Product",
+      summary: "Solves a fixture pain.",
+      path: "/products/fixture-product/",
+      pricing: "freemium",
+    });
+
+    expect(jsonLd["@type"]).toBe("SoftwareApplication");
+    expect(jsonLd.offers).toEqual({ "@type": "Offer", category: "freemium" });
+  });
+
+  it("omits offers when pricing is tbd", () => {
+    const jsonLd = softwareApplicationJsonLd({
+      title: "A Fixture Product",
+      summary: "Solves a fixture pain.",
+      path: "/products/fixture-product/",
+      pricing: "tbd",
+    });
+
+    expect(jsonLd).not.toHaveProperty("offers");
+  });
+});
+
+// No /writing/<slug>/ page exists yet (Epic 2) — this stubs the mapping ahead of
+// Story 2.3, per Story 1.8 AC2.
+describe("articleJsonLd", () => {
+  it("includes dateModified only when the article has been updated", () => {
+    const withUpdate = articleJsonLd({
+      title: "A Fixture Article",
+      date: "2026-01-01",
+      updated: "2026-02-01",
+      path: "/writing/a-fixture-article/",
+      authorName: "Tomoya Imanishi",
+    });
+    const withoutUpdate = articleJsonLd({
+      title: "A Fixture Article",
+      date: "2026-01-01",
+      path: "/writing/a-fixture-article/",
+      authorName: "Tomoya Imanishi",
+    });
+
+    expect(withUpdate.dateModified).toBe("2026-02-01");
+    expect(withoutUpdate).not.toHaveProperty("dateModified");
   });
 });
