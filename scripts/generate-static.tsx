@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { ContentRecord, ContentRegistry } from "../src/content/load";
 import { loadContentRegistry } from "../src/content/load";
 import { collectFeaturedWork } from "../src/content/featuredWork";
-import { resolveSuccessorLink } from "../src/content/productView";
+import { groupProductsForIndex, resolveSuccessorLink } from "../src/content/productView";
 import { collectRecentWriting } from "../src/content/recentWriting";
 import { collectWritingEntries } from "../src/content/writingView";
 import { buildAtomFeed } from "../src/feed/buildFeed";
@@ -34,6 +34,7 @@ import HomePage from "../src/pages/HomePage";
 import NewsletterPage from "../src/pages/NewsletterPage";
 import NotFoundPage from "../src/pages/NotFoundPage";
 import ProductDetailPage from "../src/pages/ProductDetailPage";
+import ProductsIndexPage from "../src/pages/ProductsIndexPage";
 import ProjectDetailPage from "../src/pages/ProjectDetailPage";
 import ProjectsIndexPage from "../src/pages/ProjectsIndexPage";
 import PublicationDetailPage from "../src/pages/PublicationDetailPage";
@@ -452,6 +453,43 @@ function generateProductDetailPages(registry: ContentRegistry, stylesheetHref: s
   }
 }
 
+function generateProductsIndexPage(registry: ContentRegistry, stylesheetHref: string) {
+  const { live, validating, retired } = groupProductsForIndex(registry.records.product as ContentRecord<ProductFrontmatter>[]);
+  const toCardProps = (record: (typeof live)[number]) => ({
+    slug: record.slug,
+    title: record.data.title,
+    pain: record.data.pain,
+    platforms: record.data.platforms,
+    ctaHref: record.data.cta.href,
+    ctaLabel: record.data.cta.label,
+  });
+  const toRetiredProps = (record: (typeof retired)[number]) => ({
+    slug: record.slug,
+    title: record.data.title,
+    sunsetDate: record.data.sunset!.date,
+  });
+
+  // Uses SiteLayout (full global chrome) — the reduced-chrome exception from Story
+  // 3.2 applies only to /products/<slug>/, never the index (spec §7.2).
+  const bodyHtml = renderToStaticMarkup(
+    <SiteLayout>
+      <ProductsIndexPage
+        live={live.map(toCardProps)}
+        validating={validating.map(toCardProps)}
+        retired={retired.map(toRetiredProps)}
+      />
+    </SiteLayout>,
+  );
+
+  const headHtml = buildPageMetaHtml({
+    title: "Products",
+    description: "Small, focused tools, built for researchers unless stated otherwise.",
+    path: "/products/",
+  });
+
+  writeStaticPage("/products/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
+}
+
 function generatePublicationDetailPages(registry: ContentRegistry, ownerName: string, stylesheetHref: string) {
   for (const record of registry.records.publication) {
     const data = record.data as PublicationFrontmatter;
@@ -594,6 +632,7 @@ function main() {
   generateProjectDetailPages(registry, stylesheetHref);
   generateBenchmarksPage(registry, stylesheetHref);
   generateProductDetailPages(registry, stylesheetHref);
+  generateProductsIndexPage(registry, stylesheetHref);
   generateFeed(registry);
   generateRedirectStubs(stylesheetHref);
 

@@ -6,13 +6,13 @@ interface SiteLayoutProps {
 }
 
 /**
- * Shared chrome for generated content pages. Primary nav holds only the
- * spec §7.2 primary-nav items that exist today (Projects, Publications,
- * Writing, About — Products joins once its stories land, NFR8). Benchmarks
- * and Newsletter are deliberately NOT primary-nav items per §7.2 ("reachable
- * via home and footer; keep primary nav ≤ 5 items") — both are linked from
- * the footer instead. (Story 1.4 briefly put Benchmarks in the primary nav;
- * corrected in Story 1.7.)
+ * Shared chrome for generated content pages. Primary nav now holds all 5
+ * spec §7.2 items (Projects, Publications, Writing, Products, About).
+ * Benchmarks and Newsletter are deliberately NOT primary-nav items per §7.2
+ * ("reachable via home and footer; keep primary nav ≤ 5 items") — both are
+ * linked from the footer instead. (Story 1.4 briefly put Benchmarks in the
+ * primary nav; corrected in Story 1.7.) Note: `/products/<slug>/` pages use
+ * ReducedChromeLayout instead of this component (spec §7.2's one exception).
  */
 function SiteLayout({ children }: SiteLayoutProps) {
   return (
@@ -25,6 +25,7 @@ function SiteLayout({ children }: SiteLayoutProps) {
           <a href="/projects/">Projects</a>
           <a href="/publications/">Publications</a>
           <a href="/writing/">Writing</a>
+          <a href="/products/">Products</a>
           <a href="/about/">About</a>
         </nav>
       </header>
