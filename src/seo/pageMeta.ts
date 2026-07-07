@@ -54,3 +54,26 @@ export function personJsonLd(profile: { name: string; positioning: string; ident
     sameAs: profile.identityLinks.filter((link) => !link.href.startsWith("mailto:")).map((link) => link.href),
   };
 }
+
+/** `Dataset`-bearing `CreativeWork` JSON-LD (spec §8.2) for a benchmark project's detail page — never the `/benchmarks/` index. */
+export function datasetJsonLd(project: {
+  title: string;
+  summary: string;
+  path: string;
+  datasetLinks: { label: string; href: string }[];
+  citation?: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    name: project.title,
+    description: project.summary,
+    url: `${SITE_URL}${project.path}`,
+    distribution: project.datasetLinks.map((link) => ({
+      "@type": "DataDownload",
+      name: link.label,
+      contentUrl: link.href,
+    })),
+    ...(project.citation ? { citation: project.citation } : {}),
+  };
+}

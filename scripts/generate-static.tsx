@@ -4,13 +4,24 @@ import { marked } from "marked";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { ContentRecord, ContentRegistry } from "../src/content/load";
 import { loadContentRegistry } from "../src/content/load";
-import { groupProjectsForIndex } from "../src/content/projectView";
+import {
+  findBenchmarkProjects,
+  findDatasetLinks,
+  findLeaderboardLink,
+  groupProjectsForIndex,
+} from "../src/content/projectView";
 import type { ProjectFrontmatter } from "../src/content/schema";
 import SiteLayout from "../src/layout/SiteLayout";
 import AboutPage from "../src/pages/AboutPage";
+import BenchmarksPage from "../src/pages/BenchmarksPage";
 import ProjectDetailPage from "../src/pages/ProjectDetailPage";
 import ProjectsIndexPage from "../src/pages/ProjectsIndexPage";
-import { buildPageMetaHtml, personJsonLd } from "../src/seo/pageMeta";
+import { buildPageMetaHtml, datasetJsonLd, personJsonLd } from "../src/seo/pageMeta";
+
+const BENCHMARKS_STANCE =
+  "Evaluation engineering is a focus area here, not an afterthought: benchmarks are built to be " +
+  "reproducible, honest about failure modes, and useful as public leaderboards — not just a checkbox " +
+  "before a paper submission.";
 
 // Enables the citation "Copy BibTeX" button (progressive enhancement — the BibTeX
 // text itself is always visible in a <pre>, per Story 1.3's AC on JS-optional copy).
@@ -162,20 +173,56 @@ function generateProjectDetailPages(registry: ContentRegistry, stylesheetHref: s
       </SiteLayout>,
     );
 
+    const path = `/projects/${record.slug}/`;
+    const datasetLinks = data.kind === "benchmark" ? findDatasetLinks(data.links) : [];
+
     const headHtml = buildPageMetaHtml({
       title: data.title,
       description: data.summary,
-      path: `/projects/${record.slug}/`,
+      path,
+      // Dataset-bearing CreativeWork JSON-LD belongs on the detail page, never on
+      // the /benchmarks/ index itself (Story 1.4 AC4).
+      jsonLd:
+        datasetLinks.length > 0
+          ? datasetJsonLd({ title: data.title, summary: data.summary, path, datasetLinks, citation: data.citation })
+          : undefined,
     });
 
     writeStaticPage(
-      `/projects/${record.slug}/`,
+      path,
       headHtml,
       bodyHtml,
       stylesheetHref,
       data.citation ? CITATION_COPY_SCRIPT : undefined,
     );
   }
+}
+
+function generateBenchmarksPage(registry: ContentRegistry, stylesheetHref: string) {
+  const benchmarks = findBenchmarkProjects(registry.records.project as ContentRecord<ProjectFrontmatter>[]).map(
+    (record) => ({
+      slug: record.slug,
+      title: record.data.title,
+      summary: record.data.summary,
+      leaderboardLink: findLeaderboardLink(record.data.links),
+      datasetLinks: findDatasetLinks(record.data.links),
+      hasCitation: Boolean(record.data.citation),
+    }),
+  );
+
+  const bodyHtml = renderToStaticMarkup(
+    <SiteLayout>
+      <BenchmarksPage stanceParagraph={BENCHMARKS_STANCE} benchmarks={benchmarks} />
+    </SiteLayout>,
+  );
+
+  const headHtml = buildPageMetaHtml({
+    title: "Benchmarks",
+    description: BENCHMARKS_STANCE,
+    path: "/benchmarks/",
+  });
+
+  writeStaticPage("/benchmarks/", headHtml, bodyHtml, stylesheetHref);
 }
 
 function main() {
@@ -192,6 +239,7 @@ function main() {
   }
 
   generateProjectDetailPages(registry, stylesheetHref);
+  generateBenchmarksPage(registry, stylesheetHref);
 }
 
 main();

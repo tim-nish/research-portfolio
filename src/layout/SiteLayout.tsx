@@ -6,10 +6,10 @@ interface SiteLayoutProps {
 
 /**
  * Shared chrome for generated content pages. Intentionally minimal: only nav
- * links to routes that exist today (Home, Projects, About). Publications,
- * Writing, Products, and the newsletter capture block join the footer/nav as
- * their own stories (1.5-1.7) land, per NFR8 — this is additive, not a fixed
- * final nav.
+ * links to routes that exist today (Home, Projects, Benchmarks, About).
+ * Publications, Writing, Products, and the newsletter capture block join the
+ * footer/nav as their own stories (1.5-1.7) land, per NFR8 — this is
+ * additive, not a fixed final nav.
  */
 function SiteLayout({ children }: SiteLayoutProps) {
   return (
@@ -20,6 +20,7 @@ function SiteLayout({ children }: SiteLayoutProps) {
         </a>
         <nav aria-label="Primary">
           <a href="/projects/">Projects</a>
+          <a href="/benchmarks/">Benchmarks</a>
           <a href="/about/">About</a>
         </nav>
       </header>
