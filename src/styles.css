@@ -562,3 +562,39 @@ a:hover {
   margin-top: 0;
   font-size: 1.1rem;
 }
+
+.products-intro {
+  max-width: 600px;
+  margin: 0.5rem 0 2rem;
+  color: #555953;
+}
+
+.product-tagline {
+  margin-bottom: 0.75rem;
+  color: #555953;
+}
+
+.product-list-card .product-cta {
+  margin: 1rem 0 0;
+}
+
+.product-list-card .product-cta-button {
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+}
+
+.products-retired {
+  margin-top: 2rem;
+}
+
+.products-retired summary {
+  color: #555953;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.retired-products-list {
+  margin-top: 1rem;
+  padding-left: 1.25rem;
+  color: #555953;
+}

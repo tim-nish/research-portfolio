@@ -1,9 +1,26 @@
-import type { ContentRegistry } from "./load";
+import type { ContentRecord, ContentRegistry } from "./load";
 import type { ProductFrontmatter } from "./schema";
 
 export interface SuccessorLink {
   title: string;
   href: string;
+}
+
+export interface GroupedProducts {
+  live: ContentRecord<ProductFrontmatter>[];
+  /** `validating` products with `unlisted: false` only (spec §7.3) — not sunset's opt-out. */
+  validating: ContentRecord<ProductFrontmatter>[];
+  /** `sunset` products — always included regardless of `unlisted`; retirement is not a hide mechanism (spec §6.4). */
+  retired: ContentRecord<ProductFrontmatter>[];
+}
+
+/** Groups `product` records for `/products/` per spec §7.3's three sections. */
+export function groupProductsForIndex(products: ContentRecord<ProductFrontmatter>[]): GroupedProducts {
+  return {
+    live: products.filter((p) => p.data.status === "live"),
+    validating: products.filter((p) => p.data.status === "validating" && !p.data.unlisted),
+    retired: products.filter((p) => p.data.status === "sunset"),
+  };
 }
 
 /**
