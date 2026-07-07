@@ -1,4 +1,4 @@
-import { NEWSLETTER_CONFIG } from "../newsletter/config";
+import { NEWSLETTER_CAPTURE_ENABLED, NEWSLETTER_CONFIG } from "../newsletter/config";
 
 export interface NewsletterCaptureProps {
   variant?: "footer" | "inline" | "page";
@@ -12,6 +12,10 @@ export interface NewsletterCaptureProps {
  * project/publication detail pages. One component, several rendering contexts.
  */
 function NewsletterCapture({ variant = "inline", heading, pitch }: NewsletterCaptureProps) {
+  if (!NEWSLETTER_CAPTURE_ENABLED) {
+    return null;
+  }
+
   const { mode, embedSrc, fallbackHref, buttonLabel } = NEWSLETTER_CONFIG;
 
   return (
