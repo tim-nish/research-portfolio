@@ -147,6 +147,21 @@ related: { projects: [], publications: [], products: [] }
 Body is **forbidden** in external mode — the build fails a record that has one
 (AC-4).
 
+### Syndication checklist (editorial, not build-enforced)
+
+If a canonical article is also posted elsewhere (e.g. cross-posted to dev.to),
+canonicality must never split (AP-6):
+
+1. Add an entry to that article's `syndication` field: `{ platform: devto, href: <the syndicated copy's URL> }`.
+2. On the syndicated platform itself, set that copy's canonical URL back to this
+   site's `/writing/<slug>/` page (most platforms — dev.to, Medium, Hashnode —
+   have a "canonical URL" field for exactly this).
+3. This is an editorial step, not something the build can check: the syndicated
+   copy lives on a platform this repo doesn't control, so there is no automated
+   verification that step 2 was actually done. Treat `syndication` as the
+   checklist of "where did I post this, and did I set canonical-back" — not as
+   a guarantee.
+
 ## `profile` (singleton)
 
 `content/profile.md`

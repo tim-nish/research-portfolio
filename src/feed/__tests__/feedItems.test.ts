@@ -35,7 +35,7 @@ describe("collectFeedItems", () => {
     expect(collectFeedItems(emptyRegistry())).toEqual([]);
   });
 
-  it("includes only canonical-mode articles, newest first (Phase 1 scope)", () => {
+  it("includes both canonical and external-mode articles, newest first", () => {
     const registry = emptyRegistry();
     registry.records.article.push(
       article({ slug: "old", title: "Old", date: "2026-01-01", mode: "canonical", language: "en", summary: "Old summary." }),
@@ -53,7 +53,37 @@ describe("collectFeedItems", () => {
 
     const items = collectFeedItems(registry);
 
-    expect(items.map((item) => item.title)).toEqual(["New", "Old"]);
-    expect(items[0].link).toBe("https://tim-nish.dev/writing/new/");
+    expect(items.map((item) => item.title)).toEqual(["External", "New", "Old"]);
+    expect(items.find((i) => i.title === "New")?.link).toBe("https://tim-nish.dev/writing/new/");
+  });
+
+  it("links external-mode entries straight to their external URL and marks them isExternal", () => {
+    const registry = emptyRegistry();
+    registry.records.article.push(
+      article({
+        slug: "external",
+        title: "External",
+        date: "2026-03-01",
+        mode: "external",
+        language: "ja",
+        summary: "External summary.",
+        external: { href: "https://zenn.dev/example/external", platform: "zenn" },
+      }),
+    );
+
+    const [item] = collectFeedItems(registry);
+
+    expect(item.link).toBe("https://zenn.dev/example/external");
+    expect(item.id).toBe("https://zenn.dev/example/external");
+    expect(item.isExternal).toBe(true);
+  });
+
+  it("marks canonical entries as not external", () => {
+    const registry = emptyRegistry();
+    registry.records.article.push(
+      article({ slug: "canonical", title: "Canonical", date: "2026-01-01", mode: "canonical", language: "en", summary: "x" }),
+    );
+
+    expect(collectFeedItems(registry)[0].isExternal).toBe(false);
   });
 });
