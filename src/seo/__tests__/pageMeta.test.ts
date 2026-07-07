@@ -10,6 +10,18 @@ describe("buildPageMetaHtml", () => {
     expect(html).toContain('<meta name="description" content="A description." />');
   });
 
+  it("uses rawTitle verbatim for Home's `<Owner name> — <positioning fragment>` pattern", () => {
+    const html = buildPageMetaHtml({
+      title: "ignored",
+      rawTitle: "Tomoya Imanishi — Building agentic AI systems",
+      description: "A description.",
+      path: "/",
+    });
+
+    expect(html).toContain("<title>Tomoya Imanishi — Building agentic AI systems</title>");
+    expect(html).not.toContain("ignored");
+  });
+
   it("embeds each JSON-LD block as its own script tag", () => {
     const html = buildPageMetaHtml({
       title: "About",

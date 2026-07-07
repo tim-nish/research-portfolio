@@ -13,6 +13,9 @@ bio: >
   machine learning architectures. I am currently developing KagamiOS for
   AI-assisted research planning while investigating Signature-based
   Transformers for efficient sequence modeling.
+now: >
+  Building KagamiOS and evaluating Signature-based Transformers for
+  sequence modeling.
 focus_areas:
   - agentic AI systems
   - large language models
