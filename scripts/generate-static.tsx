@@ -2,10 +2,31 @@ import fs from "node:fs";
 import path from "node:path";
 import { marked } from "marked";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { ContentRecord, ContentRegistry } from "../src/content/load";
 import { loadContentRegistry } from "../src/content/load";
+import { groupProjectsForIndex } from "../src/content/projectView";
+import type { ProjectFrontmatter } from "../src/content/schema";
 import SiteLayout from "../src/layout/SiteLayout";
 import AboutPage from "../src/pages/AboutPage";
+import ProjectDetailPage from "../src/pages/ProjectDetailPage";
+import ProjectsIndexPage from "../src/pages/ProjectsIndexPage";
 import { buildPageMetaHtml, personJsonLd } from "../src/seo/pageMeta";
+
+// Enables the citation "Copy BibTeX" button (progressive enhancement — the BibTeX
+// text itself is always visible in a <pre>, per Story 1.3's AC on JS-optional copy).
+const CITATION_COPY_SCRIPT = `
+document.querySelectorAll('[data-copy-target]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var target = document.getElementById(btn.getAttribute('data-copy-target'));
+    if (target && navigator.clipboard) {
+      navigator.clipboard.writeText(target.textContent || '');
+      var original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(function () { btn.textContent = original; }, 1500);
+    }
+  });
+});
+`.trim();
 
 const DIST_DIR = path.join(process.cwd(), "dist");
 const MANIFEST_PATH = path.join(DIST_DIR, ".vite", "manifest.json");
@@ -25,7 +46,13 @@ function loadStylesheetHref(): string {
   return `/${cssFile}`;
 }
 
-function writeStaticPage(routePath: string, headHtml: string, bodyHtml: string, stylesheetHref: string) {
+function writeStaticPage(
+  routePath: string,
+  headHtml: string,
+  bodyHtml: string,
+  stylesheetHref: string,
+  scriptHtml?: string,
+) {
   const html = `<!doctype html>
 <html lang="en">
   <head>
@@ -36,6 +63,7 @@ function writeStaticPage(routePath: string, headHtml: string, bodyHtml: string, 
   </head>
   <body>
     <div id="root">${bodyHtml}</div>
+    ${scriptHtml ? `<script>${scriptHtml}</script>` : ""}
   </body>
 </html>
 `;
@@ -83,16 +111,87 @@ function generateAboutPage(profileData: ProfileData, stylesheetHref: string) {
   writeStaticPage("/about/", headHtml, bodyHtml, stylesheetHref);
 }
 
+function generateProjectsIndexPage(registry: ContentRegistry, focusAreas: string[], stylesheetHref: string) {
+  const { active, archived } = groupProjectsForIndex(registry.records.project as ContentRecord<ProjectFrontmatter>[]);
+  const toSummary = (record: (typeof active)[number]) => ({
+    slug: record.slug,
+    title: record.data.title,
+    kind: record.data.kind,
+    summary: record.data.summary,
+    started: record.data.started,
+    links: record.data.links,
+  });
+
+  const introLine =
+    focusAreas.length > 0
+      ? `Projects spanning ${focusAreas.join(", ")}.`
+      : "Open-source projects and research systems.";
+
+  const bodyHtml = renderToStaticMarkup(
+    <SiteLayout>
+      <ProjectsIndexPage introLine={introLine} active={active.map(toSummary)} archived={archived.map(toSummary)} />
+    </SiteLayout>,
+  );
+
+  const headHtml = buildPageMetaHtml({
+    title: "Projects",
+    description: introLine,
+    path: "/projects/",
+  });
+
+  writeStaticPage("/projects/", headHtml, bodyHtml, stylesheetHref);
+}
+
+function generateProjectDetailPages(registry: ContentRegistry, stylesheetHref: string) {
+  for (const record of registry.records.project) {
+    const data = record.data as ProjectFrontmatter;
+    const relatedSlugsByType = registry.relatedBy.project[record.slug];
+
+    const bodyHtml = renderToStaticMarkup(
+      <SiteLayout>
+        <ProjectDetailPage
+          title={data.title}
+          kind={data.kind}
+          status={data.status}
+          started={data.started}
+          links={data.links}
+          bodyHtml={record.bodyHtml || undefined}
+          citation={data.citation}
+          relatedSlugsByType={relatedSlugsByType}
+        />
+      </SiteLayout>,
+    );
+
+    const headHtml = buildPageMetaHtml({
+      title: data.title,
+      description: data.summary,
+      path: `/projects/${record.slug}/`,
+    });
+
+    writeStaticPage(
+      `/projects/${record.slug}/`,
+      headHtml,
+      bodyHtml,
+      stylesheetHref,
+      data.citation ? CITATION_COPY_SCRIPT : undefined,
+    );
+  }
+}
+
 function main() {
   const stylesheetHref = loadStylesheetHref();
   const registry = loadContentRegistry();
 
   const profile = registry.records.profile[0];
   if (profile) {
-    generateAboutPage(profile.data as ProfileData, stylesheetHref);
+    const profileData = profile.data as ProfileData;
+    generateAboutPage(profileData, stylesheetHref);
+    generateProjectsIndexPage(registry, profileData.focus_areas, stylesheetHref);
   } else {
-    console.log("No profile record found — skipping /about/ generation.");
+    console.log("No profile record found — skipping /about/ and /projects/ generation.");
   }
+
+  generateProjectDetailPages(registry, stylesheetHref);
 }
 
 main();
