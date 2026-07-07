@@ -1,5 +1,11 @@
 export type NewsletterMode = "embed" | "link";
 
+/**
+ * Temporary kill switch for the newsletter signup CTA (`NewsletterCapture`).
+ * Flip back to `true` to reactivate — nothing else needs to change.
+ */
+export const NEWSLETTER_CAPTURE_ENABLED = false;
+
 export interface NewsletterConfig {
   mode: NewsletterMode;
   /** iframe URL for the ESP's hosted signup form. Required when `mode: "embed"`. */
