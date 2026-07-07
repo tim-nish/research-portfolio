@@ -44,6 +44,13 @@ export const articleFrontmatterSchema = z
         message: "external must not be set when mode is \"canonical\"",
       });
     }
+    if (data.mode === "external" && data.syndication) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["syndication"],
+        message: "syndication is only valid when mode is \"canonical\"",
+      });
+    }
   });
 
 export type ArticleFrontmatter = z.infer<typeof articleFrontmatterSchema>;

@@ -88,6 +88,18 @@ describe("loadContentRegistry — failure modes (AC2/AC3)", () => {
     }
   });
 
+  it("fails the build when an external-mode article carries a syndication field", () => {
+    try {
+      loadContentRegistry({ contentDir: bad("article-external-with-syndication") });
+      throw new Error("expected loadContentRegistry to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ContentValidationErrors);
+      expect(
+        (error as ContentValidationErrors).errors.some((e) => e.message.includes("only valid when mode")),
+      ).toBe(true);
+    }
+  });
+
   it("fails the build when a sunset product is missing sunset.date/sunset.note", () => {
     expect(() => loadContentRegistry({ contentDir: bad("product-sunset-missing-fields") })).toThrow(
       ContentValidationErrors,
