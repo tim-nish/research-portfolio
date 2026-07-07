@@ -106,6 +106,24 @@ describe("loadContentRegistry — failure modes (AC2/AC3)", () => {
     );
   });
 
+  it("fails the build when a product's cta.kind is outside the enum", () => {
+    expect(() => loadContentRegistry({ contentDir: bad("product-invalid-cta-kind") })).toThrow(
+      ContentValidationErrors,
+    );
+  });
+
+  it("fails the build when a product's pricing is outside the enum", () => {
+    expect(() => loadContentRegistry({ contentDir: bad("product-invalid-pricing") })).toThrow(
+      ContentValidationErrors,
+    );
+  });
+
+  it("fails the build when a product's platforms entry is outside the enum", () => {
+    expect(() => loadContentRegistry({ contentDir: bad("product-invalid-platform") })).toThrow(
+      ContentValidationErrors,
+    );
+  });
+
   it("fails the build when a publication's supersededBy references an unresolvable slug", () => {
     try {
       loadContentRegistry({ contentDir: bad("unresolved-superseded-by") });
