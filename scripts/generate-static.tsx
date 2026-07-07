@@ -69,17 +69,15 @@ const MANIFEST_PATH = path.join(DIST_DIR, ".vite", "manifest.json");
 
 interface ViteManifestEntry {
   file: string;
-  css?: string[];
 }
 
 function loadStylesheetHref(): string {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf-8")) as Record<string, ViteManifestEntry>;
-  const entry = manifest["index.html"];
-  const cssFile = entry?.css?.[0];
-  if (!cssFile) {
-    throw new Error(`Could not find a CSS asset for "index.html" in ${MANIFEST_PATH}`);
+  const entry = manifest["src/styles.css"];
+  if (!entry?.file) {
+    throw new Error(`Could not find the "src/styles.css" entry in ${MANIFEST_PATH}`);
   }
-  return `/${cssFile}`;
+  return `/${entry.file}`;
 }
 
 // Populated by every writeStaticPage() call — the sitemap is built from this at the

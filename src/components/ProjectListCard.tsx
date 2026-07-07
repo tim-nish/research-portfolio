@@ -6,8 +6,7 @@ interface ProjectListCardProps {
   links: { label: string; href: string }[];
 }
 
-/** Card used by `/projects/` (Story 1.3) and `/benchmarks/` (Story 1.4). Distinct from the
- * legacy home-page `ProjectCard`, which still serves the hardcoded home content until Story 1.11's cutover. */
+/** Card used by `/projects/` (Story 1.3) and `/benchmarks/` (Story 1.4). */
 function ProjectListCard({ slug, title, kind, summary, links }: ProjectListCardProps) {
   return (
     <article className="project-list-card">
