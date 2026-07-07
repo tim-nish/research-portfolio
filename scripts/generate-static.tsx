@@ -6,6 +6,7 @@ import type { ContentRecord, ContentRegistry } from "../src/content/load";
 import { loadContentRegistry } from "../src/content/load";
 import { collectFeaturedWork } from "../src/content/featuredWork";
 import { collectRecentWriting } from "../src/content/recentWriting";
+import { collectWritingEntries } from "../src/content/writingView";
 import { buildAtomFeed } from "../src/feed/buildFeed";
 import { collectFeedItems } from "../src/feed/feedItems";
 import {
@@ -33,6 +34,7 @@ import ProjectDetailPage from "../src/pages/ProjectDetailPage";
 import ProjectsIndexPage from "../src/pages/ProjectsIndexPage";
 import PublicationDetailPage from "../src/pages/PublicationDetailPage";
 import PublicationsIndexPage from "../src/pages/PublicationsIndexPage";
+import WritingIndexPage from "../src/pages/WritingIndexPage";
 import { buildRedirectStubHtml, loadRedirects } from "../src/redirects/redirects";
 import { assertTrailingSlashPolicy } from "../src/routing/trailingSlashPolicy";
 import { buildPageMetaHtml, datasetJsonLd, personJsonLd, scholarlyArticleJsonLd } from "../src/seo/pageMeta";
@@ -336,6 +338,24 @@ function generatePublicationsIndexPage(registry: ContentRegistry, ownerName: str
   writeStaticPage("/publications/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
 }
 
+function generateWritingIndexPage(registry: ContentRegistry, stylesheetHref: string) {
+  const entries = collectWritingEntries(registry);
+
+  const bodyHtml = renderToStaticMarkup(
+    <SiteLayout>
+      <WritingIndexPage entries={entries} />
+    </SiteLayout>,
+  );
+
+  const headHtml = buildPageMetaHtml({
+    title: "Writing",
+    description: "Writing grounded in built systems and measured results.",
+    path: "/writing/",
+  });
+
+  writeStaticPage("/writing/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
+}
+
 function generatePublicationDetailPages(registry: ContentRegistry, ownerName: string, stylesheetHref: string) {
   for (const record of registry.records.publication) {
     const data = record.data as PublicationFrontmatter;
@@ -465,6 +485,7 @@ function main() {
     generateProjectsIndexPage(registry, profileData.focus_areas, stylesheetHref);
     generatePublicationsIndexPage(registry, profileData.name, stylesheetHref);
     generatePublicationDetailPages(registry, profileData.name, stylesheetHref);
+    generateWritingIndexPage(registry, stylesheetHref);
     generateNewsletterPage(profileData.focus_areas, stylesheetHref);
     generateNotFoundPage(profileData, stylesheetHref);
   } else {

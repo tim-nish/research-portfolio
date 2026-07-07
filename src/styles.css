@@ -451,3 +451,46 @@ a:hover {
   padding-left: 1.25rem;
   color: #555953;
 }
+
+.writing-stance {
+  max-width: 600px;
+  margin: 0.5rem 0 1.5rem;
+  color: #555953;
+}
+
+.writing-filter-nav {
+  margin-bottom: 2rem;
+  color: #555953;
+  font-weight: 600;
+}
+
+.writing-list {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.writing-entry-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: #555953;
+  font-size: 0.85rem;
+}
+
+.topic-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+}
+
+.topic-tag {
+  padding: 0.1rem 0.55rem;
+  border: 1px solid #d8d8d3;
+  border-radius: 999px;
+  color: #536b5c;
+  font-size: 0.75rem;
+}
