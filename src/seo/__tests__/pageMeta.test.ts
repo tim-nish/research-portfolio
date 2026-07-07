@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPageMetaHtml, personJsonLd } from "../pageMeta";
+import { buildPageMetaHtml, datasetJsonLd, personJsonLd } from "../pageMeta";
 
 describe("buildPageMetaHtml", () => {
   it("follows the `<Page/Entity> — <Owner name>` title pattern and emits a canonical tag", () => {
@@ -41,5 +41,35 @@ describe("personJsonLd", () => {
     });
 
     expect(jsonLd.sameAs).toEqual(["https://github.com/example"]);
+  });
+});
+
+describe("datasetJsonLd", () => {
+  it("builds a Dataset-typed block with one DataDownload distribution entry per dataset link", () => {
+    const jsonLd = datasetJsonLd({
+      title: "QuantScenarioBench",
+      summary: "A benchmark.",
+      path: "/projects/quantscenariobench/",
+      datasetLinks: [{ label: "Datasets", href: "https://huggingface.co/QuantScenarioBench" }],
+    });
+
+    expect(jsonLd["@type"]).toBe("Dataset");
+    expect(jsonLd.url).toBe("https://tim-nish.dev/projects/quantscenariobench/");
+    expect(jsonLd.distribution).toEqual([
+      { "@type": "DataDownload", name: "Datasets", contentUrl: "https://huggingface.co/QuantScenarioBench" },
+    ]);
+    expect(jsonLd).not.toHaveProperty("citation");
+  });
+
+  it("includes citation only when present", () => {
+    const jsonLd = datasetJsonLd({
+      title: "QuantScenarioBench",
+      summary: "A benchmark.",
+      path: "/projects/quantscenariobench/",
+      datasetLinks: [],
+      citation: "@misc{qsb2026}",
+    });
+
+    expect(jsonLd.citation).toBe("@misc{qsb2026}");
   });
 });

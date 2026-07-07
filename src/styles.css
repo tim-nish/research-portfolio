@@ -291,3 +291,29 @@ a:hover {
   padding-top: 1.5rem;
   border-top: 1px solid #d8d8d3;
 }
+
+.benchmarks-stance {
+  max-width: 600px;
+  margin: 0.5rem 0 2rem;
+  color: #555953;
+}
+
+.benchmark-leaderboard-link {
+  margin-bottom: 0.75rem;
+}
+
+.project-link-pill-emphasized {
+  color: #fff;
+  background: #315b3d;
+  border-color: #315b3d;
+}
+
+.project-link-pill-emphasized:hover {
+  background: #173d23;
+}
+
+.benchmark-citation-indicator {
+  margin-top: 0.75rem;
+  color: #536b5c;
+  font-size: 0.8rem;
+}

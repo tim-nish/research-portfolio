@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { ContentRecord } from "../load";
-import { groupProjectsForIndex } from "../projectView";
+import {
+  findBenchmarkProjects,
+  findDatasetLinks,
+  findLeaderboardLink,
+  groupProjectsForIndex,
+} from "../projectView";
 import type { ProjectFrontmatter } from "../schema";
 
 function project(overrides: Partial<ProjectFrontmatter> & { slug: string }): ContentRecord<ProjectFrontmatter> {
@@ -37,5 +42,40 @@ describe("groupProjectsForIndex", () => {
 
     expect(grouped.active.map((p) => p.slug)).toEqual(["active-one"]);
     expect(grouped.archived.map((p) => p.slug)).toEqual(["archived-new", "archived-old"]);
+  });
+});
+
+describe("findBenchmarkProjects", () => {
+  it("filters to kind: benchmark only — no separate content type (spec §6.1)", () => {
+    const benchmark = project({ slug: "bench", kind: "benchmark" });
+    const tool = project({ slug: "a-tool", kind: "tool" });
+
+    expect(findBenchmarkProjects([benchmark, tool]).map((p) => p.slug)).toEqual(["bench"]);
+  });
+});
+
+describe("findLeaderboardLink", () => {
+  it("finds a link whose label mentions 'leaderboard', case-insensitively", () => {
+    const links = [
+      { label: "GitHub", href: "https://github.com/example" },
+      { label: "Live Leaderboard", href: "https://example.com/leaderboard" },
+    ];
+
+    expect(findLeaderboardLink(links)?.href).toBe("https://example.com/leaderboard");
+  });
+
+  it("returns undefined when no link mentions a leaderboard", () => {
+    expect(findLeaderboardLink([{ label: "GitHub", href: "https://github.com/example" }])).toBeUndefined();
+  });
+});
+
+describe("findDatasetLinks", () => {
+  it("finds every link whose label mentions 'dataset'", () => {
+    const links = [
+      { label: "GitHub", href: "https://github.com/example" },
+      { label: "Datasets", href: "https://example.com/datasets" },
+    ];
+
+    expect(findDatasetLinks(links)).toEqual([{ label: "Datasets", href: "https://example.com/datasets" }]);
   });
 });
