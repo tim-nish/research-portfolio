@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { ContentRecord, ContentRegistry } from "../src/content/load";
 import { loadContentRegistry } from "../src/content/load";
 import { collectFeaturedWork } from "../src/content/featuredWork";
+import { collectNewsletterIssues } from "../src/content/newsletterView";
 import { groupProductsForIndex, resolveSuccessorLink } from "../src/content/productView";
 import { collectRecentWriting } from "../src/content/recentWriting";
 import { collectWritingEntries } from "../src/content/writingView";
@@ -537,10 +538,11 @@ function generatePublicationDetailPages(registry: ContentRegistry, ownerName: st
   }
 }
 
-function generateNewsletterPage(focusAreas: string[], stylesheetHref: string) {
+function generateNewsletterPage(registry: ContentRegistry, focusAreas: string[], stylesheetHref: string) {
+  const issues = collectNewsletterIssues(registry);
   const bodyHtml = renderToStaticMarkup(
     <SiteLayout>
-      <NewsletterPage focusAreas={focusAreas} />
+      <NewsletterPage focusAreas={focusAreas} issues={issues} />
     </SiteLayout>,
   );
 
@@ -621,7 +623,7 @@ function main() {
     generatePublicationDetailPages(registry, profileData.name, stylesheetHref);
     generateWritingIndexPage(registry, stylesheetHref);
     generateArticleDetailPages(registry, profileData.name, stylesheetHref);
-    generateNewsletterPage(profileData.focus_areas, stylesheetHref);
+    generateNewsletterPage(registry, profileData.focus_areas, stylesheetHref);
     generateNotFoundPage(profileData, stylesheetHref);
   } else {
     console.log(
