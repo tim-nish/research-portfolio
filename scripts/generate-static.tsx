@@ -4,6 +4,8 @@ import { marked } from "marked";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { ContentRecord, ContentRegistry } from "../src/content/load";
 import { loadContentRegistry } from "../src/content/load";
+import { collectFeaturedWork } from "../src/content/featuredWork";
+import { collectRecentWriting } from "../src/content/recentWriting";
 import {
   findBenchmarkProjects,
   findDatasetLinks,
@@ -22,6 +24,7 @@ import { NEWSLETTER_CONFIG } from "../src/newsletter/config";
 import { initNewsletterEmbedFallback } from "../src/newsletter/embedFallback";
 import AboutPage from "../src/pages/AboutPage";
 import BenchmarksPage from "../src/pages/BenchmarksPage";
+import HomePage from "../src/pages/HomePage";
 import NewsletterPage from "../src/pages/NewsletterPage";
 import ProjectDetailPage from "../src/pages/ProjectDetailPage";
 import ProjectsIndexPage from "../src/pages/ProjectsIndexPage";
@@ -114,6 +117,7 @@ const NEWSLETTER_SCRIPTS = NEWSLETTER_CONFIG.mode === "embed" ? [NEWSLETTER_EMBE
 interface ProfileData {
   name: string;
   positioning: string;
+  now?: string;
   focus_areas: string[];
   identity_links: { label: string; href: string }[];
   languages_note?: string;
@@ -342,6 +346,54 @@ function generateNewsletterPage(focusAreas: string[], stylesheetHref: string) {
   writeStaticPage("/newsletter/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
 }
 
+function generateHomePage(registry: ContentRegistry, profileData: ProfileData, stylesheetHref: string) {
+  const featuredWork = collectFeaturedWork(registry);
+  const benchmarkCount = findBenchmarkProjects(registry.records.project as ContentRecord<ProjectFrontmatter>[]).length;
+
+  // Products has no page yet (Epic 3) — shown without a href until then; folds in
+  // automatically (becomes a link) once Story 3.3 ships /products/, no code change
+  // needed to this list's shape (NFR8).
+  const sections = [
+    { label: "Projects", href: "/projects/", count: registry.records.project.length },
+    { label: "Benchmarks", href: "/benchmarks/", count: benchmarkCount },
+    { label: "Publications", href: "/publications/", count: registry.records.publication.length },
+    { label: "Products", microDescription: "Small, focused tools" },
+    { label: "Newsletter", href: "/newsletter/", microDescription: "Occasional updates on new work" },
+  ];
+
+  // Spec §8.2: Home's title is the one exception to the `<Page> — <Owner name>`
+  // pattern — `<Owner name> — <positioning fragment>` instead.
+  const positioningFragment = profileData.positioning.trim().replace(/\.$/, "");
+
+  const bodyHtml = renderToStaticMarkup(
+    <SiteLayout>
+      <HomePage
+        name={profileData.name}
+        positioning={profileData.positioning}
+        identityLinks={profileData.identity_links}
+        now={profileData.now}
+        featuredWork={featuredWork}
+        recentWriting={collectRecentWriting(registry)}
+        sections={sections}
+      />
+    </SiteLayout>,
+  );
+
+  const headHtml = buildPageMetaHtml({
+    title: profileData.name,
+    rawTitle: `${profileData.name} — ${positioningFragment}`,
+    description: profileData.positioning,
+    path: "/",
+    jsonLd: personJsonLd({
+      name: profileData.name,
+      positioning: profileData.positioning,
+      identityLinks: profileData.identity_links,
+    }),
+  });
+
+  writeStaticPage("/", headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
+}
+
 function main() {
   const stylesheetHref = loadStylesheetHref();
   const registry = loadContentRegistry();
@@ -349,13 +401,16 @@ function main() {
   const profile = registry.records.profile[0];
   if (profile) {
     const profileData = profile.data as ProfileData;
+    generateHomePage(registry, profileData, stylesheetHref);
     generateAboutPage(profileData, stylesheetHref);
     generateProjectsIndexPage(registry, profileData.focus_areas, stylesheetHref);
     generatePublicationsIndexPage(registry, profileData.name, stylesheetHref);
     generatePublicationDetailPages(registry, profileData.name, stylesheetHref);
     generateNewsletterPage(profileData.focus_areas, stylesheetHref);
   } else {
-    console.log("No profile record found — skipping /about/, /projects/, /publications/, and /newsletter/ generation.");
+    console.log(
+      "No profile record found — skipping /, /about/, /projects/, /publications/, and /newsletter/ generation.",
+    );
   }
 
   generateProjectDetailPages(registry, stylesheetHref);

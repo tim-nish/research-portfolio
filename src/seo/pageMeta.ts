@@ -4,6 +4,12 @@ export const OWNER_NAME = "Tomoya Imanishi";
 export interface PageMetaInput {
   /** The page/entity part of the title; the owner name is appended automatically. */
   title: string;
+  /**
+   * Overrides the whole `<title>`/OG/Twitter title verbatim, bypassing the
+   * `<title> — <Owner name>` pattern — only Home uses this, per spec §8.2's
+   * `<Owner name> — <positioning fragment>` special case.
+   */
+  rawTitle?: string;
   description: string;
   /** Site-root-relative path, e.g. "/about/". */
   path: string;
@@ -19,8 +25,8 @@ function escapeAttr(value: string): string {
 }
 
 /** Builds the `<head>` metadata block (title/description/canonical/OG/Twitter/JSON-LD) shared by every page (FR7, spec §8.2). */
-export function buildPageMetaHtml({ title, description, path, jsonLd }: PageMetaInput): string {
-  const fullTitle = `${title} — ${OWNER_NAME}`;
+export function buildPageMetaHtml({ title, rawTitle, description, path, jsonLd }: PageMetaInput): string {
+  const fullTitle = rawTitle ?? `${title} — ${OWNER_NAME}`;
   const canonical = `${SITE_URL}${path}`;
   const blocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   const jsonLdHtml = blocks
