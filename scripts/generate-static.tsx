@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { ContentRecord, ContentRegistry } from "../src/content/load";
 import { loadContentRegistry } from "../src/content/load";
 import { collectFeaturedWork } from "../src/content/featuredWork";
+import { resolveSuccessorLink } from "../src/content/productView";
 import { collectRecentWriting } from "../src/content/recentWriting";
 import { collectWritingEntries } from "../src/content/writingView";
 import { buildAtomFeed } from "../src/feed/buildFeed";
@@ -21,7 +22,8 @@ import {
   groupPublicationsByYear,
   highlightOwnerAuthor,
 } from "../src/content/publicationView";
-import type { ArticleFrontmatter, ProjectFrontmatter, PublicationFrontmatter } from "../src/content/schema";
+import type { ArticleFrontmatter, ProductFrontmatter, ProjectFrontmatter, PublicationFrontmatter } from "../src/content/schema";
+import ReducedChromeLayout from "../src/layout/ReducedChromeLayout";
 import SiteLayout from "../src/layout/SiteLayout";
 import { NEWSLETTER_CONFIG } from "../src/newsletter/config";
 import { initNewsletterEmbedFallback } from "../src/newsletter/embedFallback";
@@ -31,6 +33,7 @@ import BenchmarksPage from "../src/pages/BenchmarksPage";
 import HomePage from "../src/pages/HomePage";
 import NewsletterPage from "../src/pages/NewsletterPage";
 import NotFoundPage from "../src/pages/NotFoundPage";
+import ProductDetailPage from "../src/pages/ProductDetailPage";
 import ProjectDetailPage from "../src/pages/ProjectDetailPage";
 import ProjectsIndexPage from "../src/pages/ProjectsIndexPage";
 import PublicationDetailPage from "../src/pages/PublicationDetailPage";
@@ -38,7 +41,14 @@ import PublicationsIndexPage from "../src/pages/PublicationsIndexPage";
 import WritingIndexPage from "../src/pages/WritingIndexPage";
 import { buildRedirectStubHtml, loadRedirects } from "../src/redirects/redirects";
 import { assertTrailingSlashPolicy } from "../src/routing/trailingSlashPolicy";
-import { articleJsonLd, buildPageMetaHtml, datasetJsonLd, personJsonLd, scholarlyArticleJsonLd } from "../src/seo/pageMeta";
+import {
+  articleJsonLd,
+  buildPageMetaHtml,
+  datasetJsonLd,
+  personJsonLd,
+  scholarlyArticleJsonLd,
+  softwareApplicationJsonLd,
+} from "../src/seo/pageMeta";
 import { buildRobotsTxt, buildSitemapXml } from "../src/seo/sitemap";
 
 // Only relevant once NEWSLETTER_CONFIG.mode is "embed" — serialized from the same
@@ -402,6 +412,46 @@ function generateArticleDetailPages(registry: ContentRegistry, ownerName: string
   }
 }
 
+function generateProductDetailPages(registry: ContentRegistry, stylesheetHref: string) {
+  for (const record of registry.records.product as ContentRecord<ProductFrontmatter>[]) {
+    const data = record.data;
+    const successor = resolveSuccessorLink(data.sunset?.successor, registry);
+
+    const bodyHtml = renderToStaticMarkup(
+      <ReducedChromeLayout>
+        <ProductDetailPage
+          pain={data.pain}
+          summary={data.summary}
+          status={data.status}
+          cta={data.cta}
+          platforms={data.platforms}
+          links={data.links}
+          bodyHtml={record.bodyHtml || undefined}
+          sunsetNote={data.sunset?.note}
+          successor={successor}
+        />
+      </ReducedChromeLayout>,
+    );
+
+    const path = `/products/${record.slug}/`;
+    // Spec §8.2/FR10: the page's title/description are the pain phrase, not a
+    // generic product-name headline — the page itself is the SEO instrument for it.
+    const headHtml = buildPageMetaHtml({
+      title: data.pain,
+      description: data.summary,
+      path,
+      jsonLd: softwareApplicationJsonLd({
+        title: data.title,
+        summary: data.summary,
+        path,
+        pricing: data.pricing,
+      }),
+    });
+
+    writeStaticPage(path, headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
+  }
+}
+
 function generatePublicationDetailPages(registry: ContentRegistry, ownerName: string, stylesheetHref: string) {
   for (const record of registry.records.publication) {
     const data = record.data as PublicationFrontmatter;
@@ -543,6 +593,7 @@ function main() {
 
   generateProjectDetailPages(registry, stylesheetHref);
   generateBenchmarksPage(registry, stylesheetHref);
+  generateProductDetailPages(registry, stylesheetHref);
   generateFeed(registry);
   generateRedirectStubs(stylesheetHref);
 

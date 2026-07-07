@@ -105,11 +105,7 @@ export function scholarlyArticleJsonLd(publication: {
   };
 }
 
-/**
- * `SoftwareApplication` JSON-LD (spec §8.2) for a product landing page — stubbed
- * ahead of Epic 3 (no `/products/<slug>/` page exists yet to call this), so the
- * mapping is ready and tested before Story 3.2 wires it in.
- */
+/** `SoftwareApplication` JSON-LD (spec §8.2) for a product landing page. */
 export function softwareApplicationJsonLd(product: {
   title: string;
   summary: string;
