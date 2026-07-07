@@ -19,7 +19,12 @@ export const dateSchema = z
   .union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD"), z.date()])
   .transform((value) => (value instanceof Date ? value.toISOString().slice(0, 10) : value));
 
-export const summarySchema = z.string().min(1).max(240);
+// YAML folded (`>`) scalars — the convention used throughout `content/` for
+// prose fields — always carry a trailing newline; trim it so raw (non-markdown)
+// consumers like meta descriptions and JSON-LD don't leak it.
+export const trimmedText = z.string().transform((value) => value.trim());
+
+export const summarySchema = trimmedText.pipe(z.string().min(1).max(240));
 
 export const relatedSchema = z
   .object({

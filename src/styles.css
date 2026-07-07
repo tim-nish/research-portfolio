@@ -143,3 +143,69 @@ a:hover {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: min(100% - 2rem, 760px);
+  margin: 0 auto;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #d8d8d3;
+}
+
+.site-wordmark {
+  color: #202124;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site-header nav {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.site-header nav a {
+  color: #555953;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.site-header nav a:hover {
+  color: #315b3d;
+}
+
+.site-footer {
+  width: min(100% - 2rem, 760px);
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+  border-top: 1px solid #d8d8d3;
+  color: #555953;
+}
+
+.site-footer-copyright {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.about-page .about-bio p {
+  margin-bottom: 1rem;
+  color: #555953;
+}
+
+.focus-areas {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #555953;
+}
+
+.identity-links {
+  color: #555953;
+}
+
+.languages-note {
+  margin-top: 3rem;
+  color: #536b5c;
+  font-size: 0.9rem;
+}
