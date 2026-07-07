@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "validate:content": "tsx scripts/validate-content.ts",
-    "build": "tsx scripts/validate-content.ts && tsc -b && vite build",
+    "validate:content": "tsx --tsconfig tsconfig.app.json scripts/validate-content.ts",
+    "build": "npm run validate:content && tsc -b && vite build && tsx --tsconfig tsconfig.app.json scripts/generate-static.tsx",
     "preview": "vite preview",
     "test": "vitest run"
   },

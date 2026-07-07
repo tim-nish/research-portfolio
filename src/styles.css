@@ -143,3 +143,151 @@ a:hover {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: min(100% - 2rem, 760px);
+  margin: 0 auto;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #d8d8d3;
+}
+
+.site-wordmark {
+  color: #202124;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site-header nav {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.site-header nav a {
+  color: #555953;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.site-header nav a:hover {
+  color: #315b3d;
+}
+
+.site-footer {
+  width: min(100% - 2rem, 760px);
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+  border-top: 1px solid #d8d8d3;
+  color: #555953;
+}
+
+.site-footer-copyright {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.about-page .about-bio p {
+  margin-bottom: 1rem;
+  color: #555953;
+}
+
+.focus-areas {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #555953;
+}
+
+.identity-links {
+  color: #555953;
+}
+
+.languages-note {
+  margin-top: 3rem;
+  color: #536b5c;
+  font-size: 0.9rem;
+}
+
+.projects-intro {
+  max-width: 600px;
+  margin: 0.5rem 0 2rem;
+  color: #555953;
+}
+
+.project-kind-label {
+  margin: 0 0 0.25rem;
+  color: #536b5c;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.projects-archive {
+  margin-top: 2rem;
+}
+
+.projects-archive summary {
+  color: #555953;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.projects-archive-list {
+  margin-top: 1rem;
+}
+
+.lifecycle-banner {
+  margin-bottom: 1.5rem;
+  padding: 0.6rem 1rem;
+  color: #6b5a20;
+  background: #fbf1d3;
+  border-radius: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.project-meta-line {
+  margin: 0.25rem 0 1.5rem;
+  color: #555953;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.citation-block {
+  overflow-x: auto;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e1e1dc;
+  border-radius: 0.4rem;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}
+
+.citation-copy-button {
+  padding: 0.4rem 0.9rem;
+  margin-top: 0.5rem;
+  color: #315b3d;
+  background: #fff;
+  border: 1px solid #d8d8d3;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.citation-copy-button:hover {
+  border-color: #315b3d;
+}
+
+.related-entities {
+  padding-left: 1.25rem;
+  color: #555953;
+}
+
+.standard-cta {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #d8d8d3;
+}

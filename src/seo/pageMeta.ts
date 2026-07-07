@@ -1,0 +1,56 @@
+export const SITE_URL = "https://tim-nish.dev";
+export const OWNER_NAME = "Tomoya Imanishi";
+
+export interface PageMetaInput {
+  /** The page/entity part of the title; the owner name is appended automatically. */
+  title: string;
+  description: string;
+  /** Site-root-relative path, e.g. "/about/". */
+  path: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+function escapeAttr(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/** Builds the `<head>` metadata block (title/description/canonical/OG/Twitter/JSON-LD) shared by every page (FR7, spec §8.2). */
+export function buildPageMetaHtml({ title, description, path, jsonLd }: PageMetaInput): string {
+  const fullTitle = `${title} — ${OWNER_NAME}`;
+  const canonical = `${SITE_URL}${path}`;
+  const blocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+  const jsonLdHtml = blocks
+    .map((block) => `<script type="application/ld+json">${JSON.stringify(block)}</script>`)
+    .join("\n");
+
+  return [
+    `<title>${escapeAttr(fullTitle)}</title>`,
+    `<meta name="description" content="${escapeAttr(description)}" />`,
+    `<link rel="canonical" href="${canonical}" />`,
+    `<meta property="og:title" content="${escapeAttr(fullTitle)}" />`,
+    `<meta property="og:description" content="${escapeAttr(description)}" />`,
+    `<meta property="og:url" content="${canonical}" />`,
+    `<meta property="og:type" content="website" />`,
+    `<meta name="twitter:card" content="summary" />`,
+    `<meta name="twitter:title" content="${escapeAttr(fullTitle)}" />`,
+    `<meta name="twitter:description" content="${escapeAttr(description)}" />`,
+    jsonLdHtml,
+  ]
+    .filter(Boolean)
+    .join("\n    ");
+}
+
+export function personJsonLd(profile: { name: string; positioning: string; identityLinks: { label: string; href: string }[] }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: profile.name,
+    url: `${SITE_URL}/`,
+    description: profile.positioning,
+    sameAs: profile.identityLinks.filter((link) => !link.href.startsWith("mailto:")).map((link) => link.href),
+  };
+}
