@@ -1,5 +1,5 @@
 import type { ContentRecord, ContentRegistry } from "./load";
-import type { ArticleFrontmatter } from "./schema";
+import { isSiteProjection, type AnyArticleFrontmatter, type ArticleFrontmatter } from "./schema";
 
 export interface WritingEntry {
   slug: string;
@@ -15,7 +15,12 @@ export interface WritingEntry {
 
 /** The full unified writing list for `/writing/` (spec §7.3) — canonical and external mixed, newest first. No cap (unlike Home's recent-writing block). */
 export function collectWritingEntries(registry: ContentRegistry): WritingEntry[] {
-  const articles = registry.records.article as ContentRecord<ArticleFrontmatter>[];
+  // variant: site projections render as detail pages (Story 5.2) but are not yet
+  // integrated into the unified index — Story 5.3 does that; excluded here so a
+  // committed projection can't crash the legacy-shaped sort/map below.
+  const articles = (registry.records.article as ContentRecord<AnyArticleFrontmatter>[]).filter(
+    (record): record is ContentRecord<ArticleFrontmatter> => !isSiteProjection(record.data),
+  );
 
   return [...articles]
     .sort((a, b) => b.data.date.localeCompare(a.data.date))
