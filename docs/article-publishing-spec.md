@@ -66,12 +66,16 @@ Rules:
 
 ## 4. Canonical URLs
 
-The canonical base URL is a single owner-config fact on the authoring side
-and always matches the **currently deployed** base URL of this site
-(today: the GitHub Pages project page). Syndicated copies elsewhere carry
-`canonical_url` pointing back to the corresponding page here. A future
-custom-domain move is one Pages/DNS change plus that single config edit;
-nothing in this contract assumes it.
+The canonical public base URL for site-canonical articles is
+**`https://tim-nish.dev/`** — the reader-facing canonical domain, declared
+as a single owner-config fact on the authoring side. The GitHub Pages URL
+is the **underlying technical hosting URL only**: it is never emitted as a
+`canonical_url` and never rendered as an article's public address.
+Syndicated copies elsewhere carry `canonical_url` pointing back to the
+corresponding `https://tim-nish.dev/` page. Custom-domain wiring, so that
+the canonical domain actually serves this site, is a prerequisite for the
+first site-canonical publish — a canonical URL that doesn't resolve is
+worse than none.
 
 ## 5. Acceptance
 
