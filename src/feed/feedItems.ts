@@ -1,6 +1,6 @@
 import { SITE_URL } from "../seo/pageMeta";
 import type { ContentRecord, ContentRegistry } from "../content/load";
-import { isSiteProjection, type AnyArticleFrontmatter, type ArticleFrontmatter } from "../content/schema";
+import { isSiteProjection, type AnyArticleFrontmatter } from "../content/schema";
 
 export interface FeedItem {
   id: string;
@@ -24,23 +24,34 @@ export interface FeedItem {
  * (NFR8): `buildAtomFeed` doesn't need to know the difference.
  */
 export function collectFeedItems(registry: ContentRegistry): FeedItem[] {
-  // Projections enter the feed in Story 5.3; excluded meanwhile (see writingView).
-  const articles = (registry.records.article as ContentRecord<AnyArticleFrontmatter>[]).filter(
-    (record): record is ContentRecord<ArticleFrontmatter> => !isSiteProjection(record.data),
-  );
+  const articles = registry.records.article as ContentRecord<AnyArticleFrontmatter>[];
 
-  return [...articles]
-    .sort((a, b) => b.data.date.localeCompare(a.data.date))
+  return articles
     .map((record) => {
-      const isExternal = record.data.mode === "external";
-      const link = isExternal ? record.data.external!.href : `${SITE_URL}/writing/${record.slug}/`;
+      const data = record.data;
+      // Site-canonical projections carry no summary field; the title stands in
+      // (mode rule: site-canonical entries may carry a summary, external never a body).
+      if (isSiteProjection(data)) {
+        const link = `${SITE_URL}/writing/${record.slug}/`;
+        return {
+          id: link,
+          title: data.title,
+          updated: `${data.published}T00:00:00Z`,
+          summary: data.title,
+          link,
+          isExternal: false,
+        };
+      }
+      const isExternal = data.mode === "external";
+      const link = isExternal ? data.external!.href : `${SITE_URL}/writing/${record.slug}/`;
       return {
         id: link,
-        title: record.data.title,
-        updated: `${record.data.updated ?? record.data.date}T00:00:00Z`,
-        summary: record.data.summary,
+        title: data.title,
+        updated: `${data.updated ?? data.date}T00:00:00Z`,
+        summary: data.summary,
         link,
         isExternal,
       };
-    });
+    })
+    .sort((a, b) => b.updated.localeCompare(a.updated));
 }
