@@ -1,3 +1,10 @@
+/**
+ * The canonical public base URL (docs/article-publishing-spec.md §4): the single
+ * config value every emitted canonical/OG/feed/sitemap URL is built from. The
+ * GitHub Pages URL is the underlying technical hosting URL only and must never
+ * appear in emitted markup — enforced post-generation by
+ * `src/seo/canonicalGuard.ts`.
+ */
 export const SITE_URL = "https://tim-nish.dev";
 export const OWNER_NAME = "Tomoya Imanishi";
 

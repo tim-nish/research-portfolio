@@ -31,6 +31,29 @@ function article(data: Record<string, unknown>): ContentRecord<ArticleFrontmatte
 }
 
 describe("collectRecentWriting", () => {
+  it("includes variant: site projections dated by published, linking on-site", () => {
+    const registry = emptyRegistry();
+    registry.records.article.push(
+      article({ slug: "legacy", title: "Legacy", date: "2026-01-01", mode: "canonical", language: "en", summary: "s" }),
+      article({
+        slug: "projection",
+        title: "Projection",
+        variant: "site",
+        source: "articles@a1b2c3d",
+        language: "en",
+        published: "2026-07-18",
+        generated_by: "tool@1.0.0",
+      }),
+    );
+
+    const entries = collectRecentWriting(registry);
+
+    expect(entries.map((e) => e.slug)).toEqual(["projection", "legacy"]);
+    expect(entries[0].href).toBe("/writing/projection/");
+    expect(entries[0].date).toBe("2026-07-18");
+    expect(entries[0].platform).toBeUndefined();
+  });
+
   it("returns an empty list when there are no article records yet (pre-Epic 2)", () => {
     expect(collectRecentWriting(emptyRegistry())).toEqual([]);
   });
