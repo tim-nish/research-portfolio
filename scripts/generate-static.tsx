@@ -51,7 +51,9 @@ import PublicationsIndexPage from "../src/pages/PublicationsIndexPage";
 import WritingIndexPage from "../src/pages/WritingIndexPage";
 import { buildRedirectStubHtml, loadRedirects } from "../src/redirects/redirects";
 import { assertTrailingSlashPolicy } from "../src/routing/trailingSlashPolicy";
+import { findCanonicalViolations } from "../src/seo/canonicalGuard";
 import {
+  SITE_URL,
   articleJsonLd,
   buildPageMetaHtml,
   datasetJsonLd,
@@ -688,6 +690,33 @@ function main() {
   generateRedirectStubs(stylesheetHref);
 
   generateSitemapAndRobots();
+  verifyCanonicalBase();
+}
+
+// Story 5.5 (spec §4): scan every written HTML page and fail the build if any
+// canonical/og:url was not built from the canonical base — deployment-host or
+// relative canonicals can never ship.
+function verifyCanonicalBase() {
+  const violations: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(entryPath);
+      else if (entry.name.endsWith(".html")) {
+        for (const href of findCanonicalViolations(fs.readFileSync(entryPath, "utf-8"), SITE_URL)) {
+          violations.push(`${path.relative(DIST_DIR, entryPath)}: ${href}`);
+        }
+      }
+    }
+  };
+  walk(DIST_DIR);
+  if (violations.length > 0) {
+    throw new Error(
+      `Canonical-base violations (spec §4 — every canonical/og:url must start with ${SITE_URL}):\n` +
+        violations.map((v) => `  - ${v}`).join("\n"),
+    );
+  }
+  console.log(`Canonical base verified: every canonical/og:url starts with ${SITE_URL}`);
 }
 
 main();

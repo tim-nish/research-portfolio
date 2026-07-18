@@ -36,7 +36,10 @@ describe("buildRedirectStubHtml", () => {
   it("includes rel=canonical, meta-refresh, and a plain fallback link — all JS-independent", () => {
     const html = buildRedirectStubHtml("/projects/kagamios/");
 
-    expect(html).toContain('<link rel="canonical" href="/projects/kagamios/" />');
+    // Canonical is absolute from the configured canonical base — a relative
+    // canonical would resolve to whatever host serves the page (e.g. the GitHub
+    // Pages URL), which spec §4 forbids.
+    expect(html).toContain('<link rel="canonical" href="https://tim-nish.dev/projects/kagamios/" />');
     expect(html).toContain('<meta http-equiv="refresh" content="0; url=/projects/kagamios/" />');
     expect(html).toContain('<a href="/projects/kagamios/">Continue to the new location</a>');
     expect(html).not.toContain("<script");
