@@ -35,6 +35,32 @@ describe("collectFeedItems", () => {
     expect(collectFeedItems(emptyRegistry())).toEqual([]);
   });
 
+  it("includes variant: site projections as on-site items with no external flag", () => {
+    const registry = emptyRegistry();
+    registry.records.article.push(
+      article({ slug: "legacy", title: "Legacy", date: "2026-01-01", mode: "canonical", language: "en", summary: "s" }),
+      article({
+        slug: "projection",
+        title: "Projection Title",
+        variant: "site",
+        source: "articles@a1b2c3d",
+        language: "en",
+        published: "2026-07-18",
+        generated_by: "tool@1.0.0",
+      }),
+    );
+
+    const items = collectFeedItems(registry);
+
+    expect(items.map((i) => i.title)).toEqual(["Projection Title", "Legacy"]);
+    const projection = items[0];
+    expect(projection.link).toMatch(/\/writing\/projection\/$/);
+    expect(projection.isExternal).toBe(false);
+    expect(projection.updated).toBe("2026-07-18T00:00:00Z");
+    // No body in the feed entry — the summary slot carries the title.
+    expect(projection.summary).toBe("Projection Title");
+  });
+
   it("includes both canonical and external-mode articles, newest first", () => {
     const registry = emptyRegistry();
     registry.records.article.push(

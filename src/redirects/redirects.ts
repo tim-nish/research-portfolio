@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { load } from "js-yaml";
+import { SITE_URL } from "../seo/pageMeta";
 
 export interface RedirectEntry {
   source: string;
@@ -25,7 +26,7 @@ export function buildRedirectStubHtml(destination: string, stylesheetHref?: stri
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="canonical" href="${destination}" />
+    <link rel="canonical" href="${destination.startsWith("/") ? `${SITE_URL}${destination}` : destination}" />
     <meta http-equiv="refresh" content="0; url=${destination}" />
     ${stylesheetHref ? `<link rel="stylesheet" href="${stylesheetHref}" />` : ""}
     <title>Redirecting…</title>

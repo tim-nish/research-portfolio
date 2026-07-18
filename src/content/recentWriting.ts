@@ -1,5 +1,5 @@
 import type { ContentRecord, ContentRegistry } from "./load";
-import type { ArticleFrontmatter } from "./schema";
+import { isSiteProjection, type AnyArticleFrontmatter } from "./schema";
 
 export interface RecentWritingEntry {
   slug: string;
@@ -11,23 +11,35 @@ export interface RecentWritingEntry {
 }
 
 /**
- * Up to `limit` most-recent `article` records, canonical and external mixed (spec
- * §7.3 Home block 4). Queries the real registry rather than a hardcoded empty list,
- * so it's already correct once Epic 2 (Story 2.5) adds article content — no code
- * change to this function or the Home page is required then (NFR8).
+ * Up to `limit` most-recent `article` records — legacy canonical, external, and
+ * site-canonical projections mixed (spec §7.3 Home block 4). Projections date by
+ * their `published` frontmatter and link on-site like canonical entries.
  */
 export function collectRecentWriting(registry: ContentRegistry, limit = 5): RecentWritingEntry[] {
-  const records = registry.records.article as ContentRecord<ArticleFrontmatter>[];
+  const records = registry.records.article as ContentRecord<AnyArticleFrontmatter>[];
 
-  return [...records]
-    .sort((a, b) => b.data.date.localeCompare(a.data.date))
-    .slice(0, limit)
-    .map((record) => ({
-      slug: record.slug,
-      title: record.data.title,
-      date: record.data.date,
-      language: record.data.language,
-      platform: record.data.mode === "external" ? record.data.external?.platform : undefined,
-      href: record.data.mode === "external" ? record.data.external!.href : `/writing/${record.slug}/`,
-    }));
+  return records
+    .map((record) => {
+      const data = record.data;
+      if (isSiteProjection(data)) {
+        return {
+          slug: record.slug,
+          title: data.title,
+          date: data.published,
+          language: data.language,
+          platform: undefined as string | undefined,
+          href: `/writing/${record.slug}/`,
+        };
+      }
+      return {
+        slug: record.slug,
+        title: data.title,
+        date: data.date,
+        language: data.language,
+        platform: data.mode === "external" ? data.external?.platform : undefined,
+        href: data.mode === "external" ? data.external!.href : `/writing/${record.slug}/`,
+      };
+    })
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, limit);
 }

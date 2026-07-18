@@ -23,7 +23,15 @@ import {
   groupPublicationsByYear,
   highlightOwnerAuthor,
 } from "../src/content/publicationView";
-import type { ArticleFrontmatter, ProductFrontmatter, ProjectFrontmatter, PublicationFrontmatter } from "../src/content/schema";
+import {
+  isSiteProjection,
+  type AnyArticleFrontmatter,
+  type ArticleFrontmatter,
+  type ProductFrontmatter,
+  type ProjectFrontmatter,
+  type PublicationFrontmatter,
+  type SiteProjectionFrontmatter,
+} from "../src/content/schema";
 import ReducedChromeLayout from "../src/layout/ReducedChromeLayout";
 import SiteLayout from "../src/layout/SiteLayout";
 import { NEWSLETTER_CONFIG } from "../src/newsletter/config";
@@ -43,7 +51,9 @@ import PublicationsIndexPage from "../src/pages/PublicationsIndexPage";
 import WritingIndexPage from "../src/pages/WritingIndexPage";
 import { buildRedirectStubHtml, loadRedirects } from "../src/redirects/redirects";
 import { assertTrailingSlashPolicy } from "../src/routing/trailingSlashPolicy";
+import { findCanonicalViolations } from "../src/seo/canonicalGuard";
 import {
+  SITE_URL,
   articleJsonLd,
   buildPageMetaHtml,
   datasetJsonLd,
@@ -373,9 +383,50 @@ function generateArticleDetailPages(registry: ContentRegistry, ownerName: string
   // Filters to canonical records before the loop even starts, not via a per-record
   // runtime guard — external-mode articles literally never reach writeStaticPage,
   // keeping AP-6 ("external entries do NOT get a detail page") true by construction.
-  const canonicalArticles = (registry.records.article as ContentRecord<ArticleFrontmatter>[]).filter(
-    (record) => record.data.mode === "canonical",
+  const allArticles = registry.records.article as ContentRecord<AnyArticleFrontmatter>[];
+  const canonicalArticles = allArticles.filter(
+    (record): record is ContentRecord<ArticleFrontmatter> =>
+      !isSiteProjection(record.data) && (record.data as ArticleFrontmatter).mode === "canonical",
   );
+
+  // Site-canonical projections (docs/article-publishing-spec.md §3): the committed
+  // markdown body renders verbatim as the page — titled from frontmatter only, no
+  // build-time fetching or enrichment from the authoring side.
+  const projections = allArticles.filter(
+    (record): record is ContentRecord<SiteProjectionFrontmatter> => isSiteProjection(record.data),
+  );
+
+  for (const record of projections) {
+    const data = record.data;
+
+    const bodyHtml = renderToStaticMarkup(
+      <SiteLayout>
+        <ArticleDetailPage
+          title={data.title}
+          date={data.published}
+          status="published"
+          bodyHtml={record.bodyHtml}
+        />
+      </SiteLayout>,
+    );
+
+    const pagePath = `/writing/${record.slug}/`;
+    const headHtml = buildPageMetaHtml({
+      title: data.title,
+      // Projections carry no summary field (spec §2); the title doubles as the
+      // meta description rather than deriving one from the body.
+      description: data.title,
+      path: pagePath,
+      jsonLd: articleJsonLd({
+        title: data.title,
+        date: data.published,
+        path: pagePath,
+        authorName: ownerName,
+      }),
+    });
+
+    writeStaticPage(pagePath, headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
+  }
 
   for (const record of canonicalArticles) {
     const data = record.data;
@@ -639,6 +690,33 @@ function main() {
   generateRedirectStubs(stylesheetHref);
 
   generateSitemapAndRobots();
+  verifyCanonicalBase();
+}
+
+// Story 5.5 (spec §4): scan every written HTML page and fail the build if any
+// canonical/og:url was not built from the canonical base — deployment-host or
+// relative canonicals can never ship.
+function verifyCanonicalBase() {
+  const violations: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const entryPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(entryPath);
+      else if (entry.name.endsWith(".html")) {
+        for (const href of findCanonicalViolations(fs.readFileSync(entryPath, "utf-8"), SITE_URL)) {
+          violations.push(`${path.relative(DIST_DIR, entryPath)}: ${href}`);
+        }
+      }
+    }
+  };
+  walk(DIST_DIR);
+  if (violations.length > 0) {
+    throw new Error(
+      `Canonical-base violations (spec §4 — every canonical/og:url must start with ${SITE_URL}):\n` +
+        violations.map((v) => `  - ${v}`).join("\n"),
+    );
+  }
+  console.log(`Canonical base verified: every canonical/og:url starts with ${SITE_URL}`);
 }
 
 main();
