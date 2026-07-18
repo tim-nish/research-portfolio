@@ -2,3 +2,16 @@ node_modules
 dist
 *.local
 *.tsbuildinfo
+
+# OS / runtime junk
+*.log
+.DS_Store
+*.stackdump
+
+# Owner-personal workflow config — never re-track.
+.claude/*.json
+
+# Dev container installed from the wsl-devcontainer template (see
+# .devcontainer/TEMPLATE_VERSION) — installer-managed machine-local tooling,
+# not project content, same separation as the BMAD footprint elsewhere.
+.devcontainer/
