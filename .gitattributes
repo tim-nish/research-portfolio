@@ -1,0 +1,4 @@
+# Shell scripts run inside the Linux dev container — force LF so a
+# Windows-side checkout (core.autocrlf=true) can't inject CRLF and break bash.
+*.sh text eol=lf
+.devcontainer/**/*.sh text eol=lf
