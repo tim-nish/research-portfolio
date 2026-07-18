@@ -8,6 +8,8 @@ import {
   CONTENT_TYPE_DIRS,
   CONTENT_TYPE_SCHEMAS,
   RELATED_TYPES,
+  isProjectionShaped,
+  siteProjectionFrontmatterSchema,
   type ContentType,
   type RelatedType,
 } from "./schema";
@@ -82,7 +84,13 @@ function validateFrontmatter(
   data: Record<string, unknown>,
   errors: ContentValidationError[],
 ): unknown | undefined {
-  const schema = CONTENT_TYPE_SCHEMAS[type] as ZodTypeAny;
+  // Article files with a `variant:` key are site-canonical projections
+  // (docs/article-publishing-spec.md §2) and validate against the projection
+  // schema; everything else keeps its original schema.
+  const schema =
+    type === "article" && isProjectionShaped(data)
+      ? (siteProjectionFrontmatterSchema as ZodTypeAny)
+      : (CONTENT_TYPE_SCHEMAS[type] as ZodTypeAny);
   const result = schema.safeParse(data);
   if (!result.success) {
     for (const issue of result.error.issues) {
@@ -96,10 +104,17 @@ function validateFrontmatter(
 
 function validateArticleBodyRule(
   filePath: string,
-  data: { mode: string },
+  data: { mode?: string; variant?: string },
   body: string,
   errors: ContentValidationError[],
 ) {
+  if (data.variant === "site" && body.length === 0) {
+    errors.push({
+      file: filePath,
+      message: "variant: site projections require a non-empty body (they are full-body site-canonical articles)",
+    });
+    return;
+  }
   if (data.mode === "canonical" && body.length === 0) {
     errors.push({ file: filePath, message: "mode: canonical articles require a non-empty body" });
   }
@@ -162,7 +177,7 @@ export function loadContentRegistry(options: LoadOptions = {}): ContentRegistry 
       if (!validated) continue;
 
       if (type === "article") {
-        validateArticleBodyRule(filePath, validated as { mode: string }, body, errors);
+        validateArticleBodyRule(filePath, validated as { mode?: string; variant?: string }, body, errors);
       }
 
       const slug = validated.slug;

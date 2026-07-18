@@ -12,9 +12,26 @@ describe("loadContentRegistry — good fixtures", () => {
     expect(registry.records.profile).toHaveLength(1);
     expect(registry.records.project).toHaveLength(1);
     expect(registry.records.publication).toHaveLength(1);
-    expect(registry.records.article).toHaveLength(2);
+    expect(registry.records.article).toHaveLength(3);
     expect(registry.records.product).toHaveLength(2);
     expect(registry.records["newsletter-issue"]).toHaveLength(1);
+  });
+
+  it("loads a variant: site projection with its frontmatter contract intact", () => {
+    const registry = loadContentRegistry({ contentDir: path.join(FIXTURES_ROOT, "good") });
+    const projection = registry.bySlug.article["sample-projection"];
+
+    expect(projection).toBeDefined();
+    // Title authority: the record's title is the frontmatter value, never body-derived.
+    expect(projection.data).toMatchObject({
+      title: "Sample Site-Canonical Projection",
+      variant: "site",
+      source: "articles@a1b2c3d",
+      language: "en",
+      published: "2026-07-18",
+      generated_by: "writing-assistant@1.0.0",
+    });
+    expect(projection.body.length).toBeGreaterThan(0);
   });
 
   it("computes inverse relations without requiring a reciprocal entry", () => {
@@ -96,6 +113,42 @@ describe("loadContentRegistry — failure modes (AC2/AC3)", () => {
       expect(error).toBeInstanceOf(ContentValidationErrors);
       expect(
         (error as ContentValidationErrors).errors.some((e) => e.message.includes("only valid when mode")),
+      ).toBe(true);
+    }
+  });
+
+  it("fails a projection missing its source pin, naming the file and key", () => {
+    try {
+      loadContentRegistry({ contentDir: bad("projection-missing-source") });
+      throw new Error("expected loadContentRegistry to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ContentValidationErrors);
+      const errs = (error as ContentValidationErrors).errors;
+      expect(errs.some((e) => e.file.includes("broken.md") && e.message.startsWith("source:"))).toBe(true);
+    }
+  });
+
+  it("fails a projection with a wrong variant value on the variant key itself", () => {
+    try {
+      loadContentRegistry({ contentDir: bad("projection-invalid-variant") });
+      throw new Error("expected loadContentRegistry to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ContentValidationErrors);
+      const errs = (error as ContentValidationErrors).errors;
+      expect(errs.some((e) => e.message.startsWith("variant:"))).toBe(true);
+    }
+  });
+
+  it("fails a variant: site projection with an empty body", () => {
+    try {
+      loadContentRegistry({ contentDir: bad("projection-without-body") });
+      throw new Error("expected loadContentRegistry to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ContentValidationErrors);
+      expect(
+        (error as ContentValidationErrors).errors.some((e) =>
+          e.message.includes("variant: site projections require a non-empty body"),
+        ),
       ).toBe(true);
     }
   });
