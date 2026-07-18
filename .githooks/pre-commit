@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Publication lint (Story 5.4): blocks commits carrying schema-invalid content,
+# hand-edited projections, or stray generated output. Wired by the `prepare`
+# script (git config core.hooksPath .githooks) — runs on every commit.
+set -euo pipefail
+
+npm run --silent lint:publication -- --staged
