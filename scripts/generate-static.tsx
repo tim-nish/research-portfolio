@@ -23,7 +23,15 @@ import {
   groupPublicationsByYear,
   highlightOwnerAuthor,
 } from "../src/content/publicationView";
-import type { ArticleFrontmatter, ProductFrontmatter, ProjectFrontmatter, PublicationFrontmatter } from "../src/content/schema";
+import {
+  isSiteProjection,
+  type AnyArticleFrontmatter,
+  type ArticleFrontmatter,
+  type ProductFrontmatter,
+  type ProjectFrontmatter,
+  type PublicationFrontmatter,
+  type SiteProjectionFrontmatter,
+} from "../src/content/schema";
 import ReducedChromeLayout from "../src/layout/ReducedChromeLayout";
 import SiteLayout from "../src/layout/SiteLayout";
 import { NEWSLETTER_CONFIG } from "../src/newsletter/config";
@@ -373,9 +381,50 @@ function generateArticleDetailPages(registry: ContentRegistry, ownerName: string
   // Filters to canonical records before the loop even starts, not via a per-record
   // runtime guard — external-mode articles literally never reach writeStaticPage,
   // keeping AP-6 ("external entries do NOT get a detail page") true by construction.
-  const canonicalArticles = (registry.records.article as ContentRecord<ArticleFrontmatter>[]).filter(
-    (record) => record.data.mode === "canonical",
+  const allArticles = registry.records.article as ContentRecord<AnyArticleFrontmatter>[];
+  const canonicalArticles = allArticles.filter(
+    (record): record is ContentRecord<ArticleFrontmatter> =>
+      !isSiteProjection(record.data) && (record.data as ArticleFrontmatter).mode === "canonical",
   );
+
+  // Site-canonical projections (docs/article-publishing-spec.md §3): the committed
+  // markdown body renders verbatim as the page — titled from frontmatter only, no
+  // build-time fetching or enrichment from the authoring side.
+  const projections = allArticles.filter(
+    (record): record is ContentRecord<SiteProjectionFrontmatter> => isSiteProjection(record.data),
+  );
+
+  for (const record of projections) {
+    const data = record.data;
+
+    const bodyHtml = renderToStaticMarkup(
+      <SiteLayout>
+        <ArticleDetailPage
+          title={data.title}
+          date={data.published}
+          status="published"
+          bodyHtml={record.bodyHtml}
+        />
+      </SiteLayout>,
+    );
+
+    const pagePath = `/writing/${record.slug}/`;
+    const headHtml = buildPageMetaHtml({
+      title: data.title,
+      // Projections carry no summary field (spec §2); the title doubles as the
+      // meta description rather than deriving one from the body.
+      description: data.title,
+      path: pagePath,
+      jsonLd: articleJsonLd({
+        title: data.title,
+        date: data.published,
+        path: pagePath,
+        authorName: ownerName,
+      }),
+    });
+
+    writeStaticPage(pagePath, headHtml, bodyHtml, stylesheetHref, NEWSLETTER_SCRIPTS);
+  }
 
   for (const record of canonicalArticles) {
     const data = record.data;

@@ -31,6 +31,24 @@ function article(data: Record<string, unknown>): ContentRecord<ArticleFrontmatte
 }
 
 describe("collectWritingEntries", () => {
+  it("excludes variant: site projections until Story 5.3 integrates them", () => {
+    const registry = emptyRegistry();
+    registry.records.article.push(
+      article({ slug: "legacy", title: "Legacy", date: "2026-01-01", mode: "canonical", language: "en", summary: "x" }),
+      article({
+        slug: "projection",
+        title: "Projection",
+        variant: "site",
+        source: "articles@a1b2c3d",
+        language: "en",
+        published: "2026-07-18",
+        generated_by: "tool@1.0.0",
+      }),
+    );
+
+    expect(collectWritingEntries(registry).map((e) => e.slug)).toEqual(["legacy"]);
+  });
+
   it("mixes canonical and external articles, newest first, uncapped", () => {
     const registry = emptyRegistry();
     registry.records.article.push(

@@ -1,5 +1,5 @@
 import type { ContentRecord, ContentRegistry } from "./load";
-import type { ArticleFrontmatter } from "./schema";
+import { isSiteProjection, type AnyArticleFrontmatter, type ArticleFrontmatter } from "./schema";
 
 export interface RecentWritingEntry {
   slug: string;
@@ -17,7 +17,10 @@ export interface RecentWritingEntry {
  * change to this function or the Home page is required then (NFR8).
  */
 export function collectRecentWriting(registry: ContentRegistry, limit = 5): RecentWritingEntry[] {
-  const records = registry.records.article as ContentRecord<ArticleFrontmatter>[];
+  // Projections join this block in Story 5.3; excluded meanwhile (see writingView).
+  const records = (registry.records.article as ContentRecord<AnyArticleFrontmatter>[]).filter(
+    (record): record is ContentRecord<ArticleFrontmatter> => !isSiteProjection(record.data),
+  );
 
   return [...records]
     .sort((a, b) => b.data.date.localeCompare(a.data.date))

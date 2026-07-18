@@ -1,6 +1,6 @@
 import { SITE_URL } from "../seo/pageMeta";
 import type { ContentRecord, ContentRegistry } from "../content/load";
-import type { ArticleFrontmatter } from "../content/schema";
+import { isSiteProjection, type AnyArticleFrontmatter, type ArticleFrontmatter } from "../content/schema";
 
 export interface FeedItem {
   id: string;
@@ -24,7 +24,10 @@ export interface FeedItem {
  * (NFR8): `buildAtomFeed` doesn't need to know the difference.
  */
 export function collectFeedItems(registry: ContentRegistry): FeedItem[] {
-  const articles = registry.records.article as ContentRecord<ArticleFrontmatter>[];
+  // Projections enter the feed in Story 5.3; excluded meanwhile (see writingView).
+  const articles = (registry.records.article as ContentRecord<AnyArticleFrontmatter>[]).filter(
+    (record): record is ContentRecord<ArticleFrontmatter> => !isSiteProjection(record.data),
+  );
 
   return [...articles]
     .sort((a, b) => b.data.date.localeCompare(a.data.date))
